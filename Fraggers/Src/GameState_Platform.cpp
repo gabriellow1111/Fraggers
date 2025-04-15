@@ -25,10 +25,8 @@ void Load_AllMeshes(void);
 // Variables and containers to use
 //
 // ----------------------------------------------------------------------------
-int				HeroLives = 0;
-int				Hero_Initial_X = 0;
-int				Hero_Initial_Y = 0;
-int				TotalCoins = 0;
+int				Player1_Lives = 0;
+int				Player2_Lives = 0;
 
 // list of original objects
 GameObj *		sGameObjList = nullptr;
@@ -43,12 +41,11 @@ int **			MapData = nullptr;
 int **			BinaryCollisionArray = nullptr;
 int				BINARY_MAP_WIDTH = 0;
 int				BINARY_MAP_HEIGHT = 0;
-GameObjInst *	pBlackInstance = nullptr;
-GameObjInst *	pWhiteInstance = nullptr;
 AEMtx33			MapTransform;
 
 //We need a pointer to the hero's instance for faster access
-GameObjInst *	pHero = nullptr;
+GameObjInst*	pPlayer1 = nullptr;
+GameObjInst*	pPlayer2 = nullptr;
 
 
 // ----------------------------------------------------------------------------
@@ -105,30 +102,8 @@ void GameStatePlatformUpdate(void)
 
 	Update_Input_Physics();	
 
-	Hero_Particles_Creation();
 
 	Apply_GravityPhysics();
-
-	Hero_Particles_Destruction();
-	
-
-	/***********
-	//Update enemies state machine
-	***********/
-	for (i = 0; i < GAME_OBJ_INST_NUM_MAX; ++i)
-	{
-		pInst = sGameObjInstList + i;
-
-		// skip non-active object
-		if ((pInst->flag & FLAG_ACTIVE) == 0)
-			continue;
-
-		// Update enemy behaviour
-		if (pInst->pObject->type == TYPE_OBJECT_ENEMY)
-		{
-			EnemyStateMachine(pInst);
-		}
-	}
 	
 
 	/***********
@@ -158,7 +133,7 @@ void GameStatePlatformUpdate(void)
 
 	Update_ObjectsTransformations();	
 
-	if (gGameStateCurr == GS_PLATFORM2)
+	if (gGameStateCurr == GS_DEATHMATCH)
 	{
 		Update_CameraPosition_Level2();
 	}
@@ -263,69 +238,14 @@ void Load_AllMeshes(void)
 	AE_ASSERT_MESG(pObj->pMesh, "fail to create object!!");
 
 
-	//Creating the hero object
+	//Creating player 1 object
 	pObj = sGameObjList + sGameObjNum++;
-	pObj->type = TYPE_OBJECT_HERO;
+	pObj->type = TYPE_OBJECT_PLAYER1;
 
 
-	AEGfxMeshStart();
-	AEGfxTriAdd(
-		-0.5f, -0.5f, 0xFF0000FF, 0.0f, 0.0f,
-		0.5f, -0.5f, 0xFF0000FF, 0.0f, 0.0f,
-		-0.5f, 0.5f, 0xFF0000FF, 0.0f, 0.0f);
-
-	AEGfxTriAdd(
-		-0.5f, 0.5f, 0xFF0000FF, 0.0f, 0.0f,
-		0.5f, -0.5f, 0xFF0000FF, 0.0f, 0.0f,
-		0.5f, 0.5f, 0xFF0000FF, 0.0f, 0.0f);
-
-	pObj->pMesh = AEGfxMeshEnd();
-	AE_ASSERT_MESG(pObj->pMesh, "fail to create object!!");
-
-
-	//Creating the enemy object
+	//Creating player 2 object
 	pObj = sGameObjList + sGameObjNum++;
-	pObj->type = TYPE_OBJECT_ENEMY;
-
-
-	AEGfxMeshStart();
-	AEGfxTriAdd(
-		-0.5f, -0.5f, 0xFFFF0000, 0.0f, 0.0f,
-		0.5f, -0.5f, 0xFFFF0000, 0.0f, 0.0f,
-		-0.5f, 0.5f, 0xFFFF0000, 0.0f, 0.0f);
-
-	AEGfxTriAdd(
-		-0.5f, 0.5f, 0xFFFF0000, 0.0f, 0.0f,
-		0.5f, -0.5f, 0xFFFF0000, 0.0f, 0.0f,
-		0.5f, 0.5f, 0xFFFF0000, 0.0f, 0.0f);
-
-	pObj->pMesh = AEGfxMeshEnd();
-	AE_ASSERT_MESG(pObj->pMesh, "fail to create object!!");
-
-
-	//Creating the Coin object
-	pObj = sGameObjList + sGameObjNum++;
-	pObj->type = TYPE_OBJECT_COIN;
-
-
-	AEGfxMeshStart();
-	//Creating the circle shape
-	int Parts = 12;
-	for (float i = 0; i < Parts; ++i)
-	{
-		AEGfxTriAdd(
-			0.0f, 0.0f, 0xFFFFFF00, 0.0f, 0.0f,
-			cosf(i * 2 * PI / Parts) * 0.5f, sinf(i * 2 * PI / Parts) * 0.5f, 0xFFFFFF00, 0.0f, 0.0f,
-			cosf((i + 1) * 2 * PI / Parts) * 0.5f, sinf((i + 1) * 2 * PI / Parts) * 0.5f, 0xFFFFFF00, 0.0f, 0.0f);
-	}
-
-	pObj->pMesh = AEGfxMeshEnd();
-	AE_ASSERT_MESG(pObj->pMesh, "fail to create object!!");
-	
-	
-	//Creating the Particle object
-	pObj = sGameObjList + sGameObjNum++;
-	pObj->type = TYPE_OBJECT_PARTICLE;
+	pObj->type = TYPE_OBJECT_PLAYER2;
 
 	AEGfxMeshStart();
 	AEGfxTriAdd(

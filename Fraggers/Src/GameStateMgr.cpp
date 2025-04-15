@@ -77,8 +77,8 @@ void GameStateMgrUpdate()
 		GameStateFree = GameStateMainMenuFree;
 		GameStateUnload = GameStateMainMenuUnload;
 		break;
-	case GS_PLATFORM1:
-	case GS_PLATFORM2:
+	case GS_BATTLE:
+	case GS_DEATHMATCH:
 		GameStateLoad = GameStatePlatformLoad;
 		GameStateInit = GameStatePlatformInit;
 		GameStateUpdate = GameStatePlatformUpdate;

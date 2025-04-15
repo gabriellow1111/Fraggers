@@ -1,17 +1,3 @@
-/* Start Header ************************************************************************/
-/*!
-\file		Main.cpp
-\author		DigiPen, DigiPen, DigiPen
-\par		digipen@digipen.edu
-\date		January, 22, 2025
-\brief		Entry point file with WinMain implementing the 2 nested loops.
-
-Copyright (C) 2025 DigiPen Institute of Technology.
-Reproduction or disclosure of this file or its contents
-without the prior written consent of DigiPen Institute of
-Technology is prohibited.
-*/
-/* End Header **************************************************************************/
 
 #include "main.h"
 #include <memory>
@@ -40,10 +26,10 @@ int WINAPI WinMain(HINSTANCE instanceH, HINSTANCE prevInstanceH, LPSTR command_l
 #endif
 
 	// Initialize the system
-	AESysInit(instanceH, show, 800, 600, 1, 60, false, NULL);
+	AESysInit(instanceH, show, 1600, 900, 1, 60, false, NULL);
 
 	// Changing the window title
-	AESysSetWindowTitle("Platformer Demo!");
+	AESysSetWindowTitle("Fraggers");
 
 	// Set background color
 	AEGfxSetBackgroundColor(0.0f, 0.0f, 0.0f);

@@ -33,10 +33,8 @@ enum TYPE_OBJECT
 {
 	TYPE_OBJECT_EMPTY,			//0
 	TYPE_OBJECT_COLLISION,		//1
-	TYPE_OBJECT_HERO,			//2
-	TYPE_OBJECT_ENEMY,			//3
-	TYPE_OBJECT_COIN,			//4
-	TYPE_OBJECT_PARTICLE		//5  	//ADDED_NEW
+	TYPE_OBJECT_PLAYER1,			//2
+	TYPE_OBJECT_PLAYER2,			//3
 };
 
 // ----------------------------------------------------------------------------
@@ -113,10 +111,10 @@ struct GameObjInst
 // Externs
 //
 // ----------------------------------------------------------------------------
-extern int				HeroLives;
+extern int				Player1_Lives;
+extern int				Player2_Lives;
 extern int				Hero_Initial_X;
 extern int				Hero_Initial_Y;
-extern int				TotalCoins;
 extern GameObj *		sGameObjList;
 extern unsigned int		sGameObjNum;
 extern GameObjInst *	sGameObjInstList;
@@ -128,16 +126,14 @@ extern int				BINARY_MAP_HEIGHT;
 extern GameObjInst *	pBlackInstance;
 extern GameObjInst *	pWhiteInstance;
 extern AEMtx33			MapTransform;
-extern GameObjInst *	pHero;
-
+extern GameObjInst *	pPlayer1;
+extern GameObjInst*		pPlayer2;
 
 void Import_MapData(void);
 void Compute_MapTransformMatrix(void);
 void Starting_GameObjectsInstances(void);
 void Update_Input_Physics(void);
-void Hero_Particles_Creation(void);
 void Apply_GravityPhysics(void);
-void Hero_Particles_Destruction(void);
 void Update_BoundingBoxes(void);
 void Update_Positions(void);
 void Check_GridBinaryCollision(void);
@@ -174,6 +170,8 @@ int		GetCellValue(int X, int Y);
 int		CheckInstanceBinaryMapCollision(float PosX, float PosY,
 										float scaleX, float scaleY);
 void	SnapToCell(float* Coordinate);
+void	SpawnPlayersRandomly(void);
+int		GenerateRandomMap(void);
 int		ImportMapDataFromFile(char* FileName);
 void	FreeMapData(void);
 void	PrintRetrievedInformation(void);

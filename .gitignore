@@ -12,3 +12,6 @@
 *.vsidx
 *.DS_Store
 *.aps
+*.tlog
+*.obj
+*.idb

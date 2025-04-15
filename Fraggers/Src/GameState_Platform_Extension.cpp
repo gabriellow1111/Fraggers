@@ -35,16 +35,16 @@ void Import_MapData(void)
 	BINARY_MAP_HEIGHT = 0;
 
 	// LEVEL 1
-	if (gGameStateCurr == GS_PLATFORM1)
+	if (gGameStateCurr == GS_BATTLE)
 	{
 		//Importing Data - Must Quit the application if "ImportMapDataFromFile" fails
-		if (!ImportMapDataFromFile("..\\Resources\\Levels\\Exported.txt"))
-			gGameStateNext = GS_QUIT;
-
+		/*if (!ImportMapDataFromFile("..\\Resources\\Levels\\Exported.txt"))
+			gGameStateNext = GS_QUIT;*/
+		GenerateRandomMap();
 	}
 
 	// LEVEL 2
-	else if (gGameStateCurr == GS_PLATFORM2)
+	else if (gGameStateCurr == GS_DEATHMATCH)
 	{
 		//Importing Data - Must Quit the application if "ImportMapDataFromFile" fails
 		if (!ImportMapDataFromFile("..\\Resources\\Levels\\Exported2.txt"))
@@ -98,11 +98,8 @@ void Starting_GameObjectsInstances(void)
 {
 	int i = 0, j = 0;
 
-	pHero = nullptr;
 	pBlackInstance = nullptr;
 	pWhiteInstance = nullptr;
-	TotalCoins = 0;
-
 	//Create an object instance representing the black cell.
 	//This object instance should not be visible. When rendering the grid cells, each time we have
 	//a non collision cell, we position this instance in the correct location and then we render it
@@ -117,9 +114,12 @@ void Starting_GameObjectsInstances(void)
 	pWhiteInstance = gameObjInstCreate(TYPE_OBJECT_COLLISION, &scl, 0, 0, 0.0f);
 	pWhiteInstance->flag ^= FLAG_VISIBLE;
 	pWhiteInstance->flag |= FLAG_NON_COLLIDABLE;
+	pPlayer1 = nullptr;
+	pPlayer2 = nullptr;
 
 	//Setting the inital number of hero lives
-	HeroLives = HERO_LIVES;
+	Player1_Lives = HERO_LIVES;
+	Player2_Lives = HERO_LIVES;
 
 	GameObjInst* pInst = nullptr;
 	AEVec2 Pos = { 0.f,0.f };
@@ -164,24 +164,13 @@ void Starting_GameObjectsInstances(void)
 			case (TYPE_OBJECT_EMPTY):
 				// Do nothing for empty or collision cells.
 				break;
-			case (TYPE_OBJECT_HERO):
-				// Store the hero's initial position.
-				Hero_Initial_X = i;
-				Hero_Initial_Y = j;
-
-				// Create the hero object instance.
-				pHero = gameObjInstCreate(TYPE_OBJECT_HERO, &scl, &Pos, 0, 0.0f);
+			case (TYPE_OBJECT_PLAYER1):
+				// Create player 1 object instance.
+				pPlayer1 = gameObjInstCreate(TYPE_OBJECT_PLAYER1, &scl, &Pos, 0, 0.0f);
 				break;
-			case (TYPE_OBJECT_ENEMY):
-				// Create an enemy object instance at this position.
-				pInst = gameObjInstCreate(TYPE_OBJECT_ENEMY, &scl, &Pos, 0, 0.0f);
-				break;
-			case (TYPE_OBJECT_COIN):
-				// Create a coin object instance at this position.
-				pInst = gameObjInstCreate(TYPE_OBJECT_COIN, &scl, &Pos, 0, 0.0f);
-
-				// Increase the total coin counter.
-				TotalCoins++;
+			case (TYPE_OBJECT_PLAYER2):
+				// Create player 2 object instance.
+				pPlayer2 = gameObjInstCreate(TYPE_OBJECT_PLAYER2, &scl, &Pos, 0, 0.0f);
 				break;
 			default:
 				// Handle any unknown object types (if necessary).
@@ -200,106 +189,59 @@ bool flip = false;
 // =========================================================
 void Update_Input_Physics(void)
 {
-	/***********
-	if Right arrow key is pressed
-		Set hero velocity X to MOVE_VELOCITY_HERO
-	else
-	if Left arrow key is pressed
-		Set hero velocity X to -MOVE_VELOCITY_HERO
-	else
-		Set hero velocity X to 0
-
-	if Spacebar key is triggered 
-		if Hero is colliding from the bottom
-			Set hero velocity Y to JUMP_VELOCITY
-
-	if Escape key is triggered
-		Exit to main menu
-	***********/
-
-	if (AEInputCheckCurr(AEVK_RIGHT))//DO NOT change or update or duplicate this input code line! Otherwise penalties may apply!
+	// PLAYER 1 CONTROLS
+	if (AEInputCheckCurr(AEVK_D))//DO NOT change or update or duplicate this input code line! Otherwise penalties may apply!
 	{		
-		pHero->velCurr.x = MOVE_VELOCITY_HERO; // Move hero to the right
+		pPlayer1->velCurr.x = MOVE_VELOCITY_HERO; // Move hero to the right
+		flip = false; // Ensure the hero faces right.
+	}
+	else if (AEInputCheckCurr(AEVK_A))//DO NOT change or update or duplicate this input code line! Otherwise penalties may apply!
+	{
+		pPlayer1->velCurr.x = -MOVE_VELOCITY_HERO; // Move hero to the left.
+		flip = true; // Ensure the hero faces left.
+	}
+	else {
+		pPlayer1->velCurr.x = 0.f; // Stop horizontal movement if no keys are pressed.
+	}
+	
+
+	if (AEInputCheckTriggered(AEVK_W))//DO NOT change or update or duplicate this input code line! Otherwise penalties may apply!
+	{
+		// Allow jumping only if the hero is standing on the ground.
+		if (pPlayer1->gridCollisionFlag & COLLISION_BOTTOM) {
+			pPlayer1->velCurr.y = JUMP_VELOCITY; // Apply jump velocity.
+		}
+	}
+	
+	// PLAYER 2 CONTROLS
+	if (AEInputCheckCurr(AEVK_RIGHT))//DO NOT change or update or duplicate this input code line! Otherwise penalties may apply!
+	{
+		pPlayer2->velCurr.x = MOVE_VELOCITY_HERO; // Move hero to the right
 		flip = false; // Ensure the hero faces right.
 	}
 	else if (AEInputCheckCurr(AEVK_LEFT))//DO NOT change or update or duplicate this input code line! Otherwise penalties may apply!
 	{
-		pHero->velCurr.x = -MOVE_VELOCITY_HERO; // Move hero to the left.
+		pPlayer2->velCurr.x = -MOVE_VELOCITY_HERO; // Move hero to the left.
 		flip = true; // Ensure the hero faces left.
 	}
 	else {
-		pHero->velCurr.x = 0.f; // Stop horizontal movement if no keys are pressed.
+		pPlayer2->velCurr.x = 0.f; // Stop horizontal movement if no keys are pressed.
 	}
-	
 
-	if (AEInputCheckTriggered(AEVK_SPACE))//DO NOT change or update or duplicate this input code line! Otherwise penalties may apply!
+
+	if (AEInputCheckTriggered(AEVK_UP))//DO NOT change or update or duplicate this input code line! Otherwise penalties may apply!
 	{
 		// Allow jumping only if the hero is standing on the ground.
-		if (pHero->gridCollisionFlag & COLLISION_BOTTOM) {
-			pHero->velCurr.y = JUMP_VELOCITY; // Apply jump velocity.
+		if (pPlayer2->gridCollisionFlag & COLLISION_BOTTOM) {
+			pPlayer2->velCurr.y = JUMP_VELOCITY; // Apply jump velocity.
 		}
+
 	}
-	
 	if (AEInputCheckTriggered(AEVK_ESCAPE))//DO NOT change or update or duplicate this input code line! Otherwise penalties may apply!
 	{		
 		gGameStateNext = GS_MAINMENU; // Change game state to main menu.
 	}
 }
-
-// =========================================================
-// 
-// Particle System
-//  -- Particles creation with random properties
-//  -- Do not exceed 100 particles running at once, per frame
-//  -- Particles spawn relative to Hero's location
-//  -- You can use "AERandFloat()" helper AE function	
-// 
-// =========================================================
-void Hero_Particles_Creation(void)
-{
-	AEVec2 scl{}, pos{}, vel{};
-
-	int activeParticles = 0;
-
-	// Count active particles
-	for (unsigned int i = 0; i < GAME_OBJ_INST_NUM_MAX; i++)
-	{
-		// Check if the object is active and is a particle
-		if (sGameObjInstList[i].flag & FLAG_ACTIVE &&
-			sGameObjInstList[i].pObject->type == TYPE_OBJECT_PARTICLE)
-		{
-			activeParticles++;
-		}
-	}
-
-	// Limit the number of active particles to 200
-	if (activeParticles < 200)
-	{
-		// Randomized scale
-		scl.x = 0.3f + AERandFloat() * 0.2f;
-		scl.y = 0.5f + AERandFloat() * 0.1f;
-
-		// Offset from hero position (randomized for spread effect)
-		pos.x = pHero->posCurr.x - AERandFloat() * 0.05f - 0.3f;
-		pos.y = pHero->posCurr.y + AERandFloat() * 1.0f + 0.3f;
-
-		// Set velocity aimed upward with slight left/right variation
-		vel.x = AERandFloat() * -0.01f - 0.8f;
-		vel.y = 4.f + AERandFloat() * 3.0f;
-
-		// Flip particles x-pos and vel.x if player facing other side
-		if (flip) {
-			pos.x += 0.7f;
-			vel.x = -vel.x;
-		}
-		// Create the particle instance
-		GameObjInst* pParticle = gameObjInstCreate(TYPE_OBJECT_PARTICLE, &scl, &pos, &vel, 0.0f);
-
-		// Assign a random lifetime between 0.5 and 1.0 seconds
-		pParticle->lifetime = 0.5f + AERandFloat() * 0.5f;
-	}
-}
-
 
 // =========================================================
 // 
@@ -325,35 +267,8 @@ void Apply_GravityPhysics(void)
 		Apply gravity
 			Velocity Y = Gravity * Frame Time + Velocity Y
 		****************/
-		if (pInst->pObject->type == TYPE_OBJECT_HERO || pInst->pObject->type == TYPE_OBJECT_ENEMY)
+		if (pInst->pObject->type == TYPE_OBJECT_PLAYER1 || pInst->pObject->type == TYPE_OBJECT_PLAYER2)
 			pInst->velCurr.y += (f32)(GRAVITY * g_dt);
-	}
-}
-
-// =========================================================
-// 
-// Particle System
-//  -- Particles destruction based on its lifetime	
-// 
-// =========================================================
-void Hero_Particles_Destruction(void)
-{
-	for (unsigned int i = 0; i < GAME_OBJ_INST_NUM_MAX; i++) 
-	{
-		GameObjInst* pInst = &sGameObjInstList[i]; 
-
-		// Check if the instance is active and is a particle
-		if ((pInst->flag & FLAG_ACTIVE) && pInst->pObject->type == TYPE_OBJECT_PARTICLE) 
-		{
-			// Reduce lifetime based on delta time 
-			pInst->lifetime -= (float)g_dt; 
-
-			// Destroy the particle if its lifetime has expired
-			if (pInst->lifetime <= 0.0f) 
-			{
-				pInst->flag = 0; // Mark as inactive 
-			}
-		}
 	}
 }
 
@@ -424,7 +339,7 @@ void Check_GridBinaryCollision(void)
 		// Skip non-active object instances
 		if ((pInst->flag & FLAG_ACTIVE) == 0)
 			continue;
-		if (pInst->pObject->type != TYPE_OBJECT_HERO && pInst->pObject->type != TYPE_OBJECT_ENEMY)
+		if (pInst->pObject->type != TYPE_OBJECT_PLAYER1 && pInst->pObject->type != TYPE_OBJECT_PLAYER2)
 			continue;
 
 		/*************
@@ -523,48 +438,15 @@ void Update_AABBCollisions(void)
 			continue;
 
 		// Skip objects that are neither enemies nor coins
-		if (pInst->pObject->type != TYPE_OBJECT_ENEMY && pInst->pObject->type != TYPE_OBJECT_COIN) 
+		if (pInst->pObject->type != TYPE_OBJECT_PLAYER2) 
 			continue;
 
 		// Check collision if the object is an enemy
-		if (pInst->pObject->type == TYPE_OBJECT_ENEMY) 
+		if (pInst->pObject->type == TYPE_OBJECT_PLAYER2) 
 		{
 			// Check for collision between enemy and hero
-			if (CollisionIntersection_RectRect(pInst->boundingBox, pInst->velCurr, pHero->boundingBox, pHero->velCurr, tFirst))
+			if (CollisionIntersection_RectRect(pInst->boundingBox, pInst->velCurr, pPlayer1->boundingBox, pPlayer1->velCurr, tFirst))
 			{
-				HeroLives--; // Decrement hero lives by 1
-
-				// Reset hero position if lives remain, otherwise restart level
-				if (HeroLives > 0) {
-					pHero->posCurr.x = (f32)Hero_Initial_X;
-					pHero->posCurr.y = (f32)Hero_Initial_Y;
-				}
-				else {
-					gGameStateNext = GS_RESTART;
-				}
-			}
-		}
-
-		// Check collision if the object is a coin
-		if (pInst->pObject->type == TYPE_OBJECT_COIN)
-		{
-			// Check for collision between coin and hero
-			if (CollisionIntersection_RectRect(pInst->boundingBox, pInst->velCurr, pHero->boundingBox, pHero->velCurr, tFirst))
-			{
-				pInst->flag = 0; // Remove the coin
-				TotalCoins--; // Decrease total coin count
-
-				// If all coins are collected, change game state
-				if (TotalCoins == 0) {
-					if (gGameStateCurr == GS_PLATFORM1)
-					{
-						gGameStateNext = GS_PLATFORM2; // Move to next level
-					}
-					else if (gGameStateCurr == GS_PLATFORM2)
-					{
-						gGameStateNext = GS_MAINMENU; // Return to main menu
-					}
-				}
 			}
 		}
 	}
@@ -639,7 +521,7 @@ void Update_CameraPosition_Level2(void)
 	float maxCamY = levelHeight - halfWindowHeight*2;
 
 	// Clamp the camera position:
-	AEVec2 camPos{ pHero->posCurr.x * cellWidth - halfWindowWidth, pHero->posCurr.y * cellHeight - halfWindowHeight };
+	AEVec2 camPos{ pPlayer1->posCurr.x * cellWidth - halfWindowWidth, pPlayer1->posCurr.y * cellHeight - halfWindowHeight };
 	camPos.x = AEClamp(camPos.x, 0.f, maxCamX);
 	camPos.y = AEClamp(camPos.y, 0.f, maxCamY);
 
@@ -736,17 +618,6 @@ void Draw_DynamicObjectsInstances(void)
 			continue;
 
 		// Apply any additional rendering setup - if needed here
-		if (pInst->pObject->type == TYPE_OBJECT_PARTICLE) {
-			if (AERandFloat() > 0.8f) {
-				AEGfxSetColorToMultiply(0.2f, 1.f, 0.2f, 0.5f); // Green particle
-			}
-			else {
-				AEGfxSetColorToMultiply(0.2f, 0.2f, 1.f, 0.5f); // Blue particle
-			}
-		}
-		else {
-			AEGfxSetColorToMultiply(1.f, 1.f, 1.f, 1.f); // No color change
-		}
 
 		// Concatenate the MapTransform matrix with the transformation of each game object instance here
 		AEMtx33Concat(&objectFinalTransformation, &MapTransform, &pInst->transform);
@@ -768,16 +639,6 @@ void Draw_DynamicObjectsInstances(void)
 void Display_GameStats(void)
 {
 	
-	char strBuffer[100];
-	memset(strBuffer, 0, 100 * sizeof(char));
-
-	// Display Hero Lives
-	sprintf_s(strBuffer, "Lives:  %i", HeroLives);
-	AEGfxPrint(fontId, strBuffer, 0.7f, 0.9f, 1.f, 0.f, 0.f, 1.f, 1.f);
-
-	// Display Total Coins left
-	sprintf_s(strBuffer, "Coins left:  %i", TotalCoins);
-	AEGfxPrint(fontId, strBuffer, -0.90f, 0.9f, 1.f, 0.f, 0.f, 1.f, 1.f);
 }
 
 // ----------------------------------------------------------------------------
@@ -1086,6 +947,84 @@ void SnapToCell(float* Coordinate)
 	*Coordinate = static_cast<float>(integralPart) + 0.5f;
 }
 
+void SpawnPlayersRandomly()
+{
+	int player1Spawned = 0;
+	int player2Spawned = 0;
+
+	srand((unsigned int)time(NULL)); // Seed RNG if not already done
+
+	while (!player1Spawned || !player2Spawned) {
+		int x = rand() % BINARY_MAP_WIDTH;
+		int y = rand() % (BINARY_MAP_HEIGHT - 1); // avoid bottom row
+
+		// Valid if current tile is empty and tile below is solid
+		if (MapData[y][x] == 0 && MapData[y + 1][x] == 1) {
+			if (!player1Spawned) {
+				MapData[y][x] = 2;
+				player1Spawned = 1;
+			}
+			else if (!player2Spawned) {
+				// Don't spawn both players on same tile
+				if (MapData[y][x] == 0) {
+					MapData[y][x] = 3;
+					player2Spawned = 1;
+				}
+			}
+		}
+	}
+}
+
+int GenerateRandomMap(void)
+{
+	// Initialize the map dimensions
+	BINARY_MAP_WIDTH = 40;
+	BINARY_MAP_HEIGHT = 40;
+	// Generate a random map with a solid ground and some floating platforms
+	int width = BINARY_MAP_WIDTH;
+	int height = BINARY_MAP_HEIGHT;
+
+	MapData = new int* [height];
+	BinaryCollisionArray = new int* [height];
+
+	for (int i = 0; i < height; ++i) {
+		MapData[i] = new int[width];
+		BinaryCollisionArray[i] = new int[width];
+	}
+
+	srand((unsigned int)time(NULL));
+
+	// Parameters
+	int groundHeight = height - 3; // ground starts 3 rows from the bottom
+	float platformChance = 0.1f;   // 10% chance to spawn a floating platform block
+
+	for (int i = 0; i < height; ++i) {
+		for (int j = 0; j < width; ++j) {
+			if (i >= groundHeight) {
+				// Solid ground at the bottom
+				MapData[i][j] = 1;
+			}
+			else if (rand() % 100 < (int)(platformChance * 100)) {
+				// Random floating platform block
+				// Optional: avoid stacking floating blocks vertically
+				if (i > 0 && MapData[i - 1][j] == 0) {
+					MapData[i][j] = 1;
+				}
+				else {
+					MapData[i][j] = 0;
+				}
+			}
+			else {
+				MapData[i][j] = 0;
+			}
+
+			BinaryCollisionArray[i][j] = (MapData[i][j] == 1) ? 1 : 0;
+		}
+	}
+	SpawnPlayersRandomly();
+	return 1;
+}
+
 // ----------------------------------------------------------------------------
 //
 //	This function opens the file name "FileName" and retrieves all the map data.
@@ -1145,7 +1084,7 @@ int ImportMapDataFromFile(char* FileName)
 	BINARY_MAP_WIDTH = std::stoi(line.substr(6).c_str()); // Read width digit
 
 	std::getline(file, line); // Read height line
-	BINARY_MAP_HEIGHT = std::stoi(line.substr(7).c_str());; // Read height digit
+	BINARY_MAP_HEIGHT = std::stoi(line.substr(7).c_str()); // Read height digit
 
 	// Allocate memory for MapData and BinaryCollisionArray
 	MapData = new int* [BINARY_MAP_HEIGHT];

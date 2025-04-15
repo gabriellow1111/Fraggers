@@ -1,17 +1,3 @@
-/* Start Header ************************************************************************/
-/*!
-\file		GameState_MainMenu.cpp
-\author
-\par
-\date
-\brief
-
-Copyright (C) 20xx DigiPen Institute of Technology.
-Reproduction or disclosure of this file or its contents
-without the prior written consent of DigiPen Institute of
-Technology is prohibited.
-*/
-/* End Header **************************************************************************/
 
 #include "Main.h"
 
@@ -45,9 +31,9 @@ void GameStateMainMenuInit(void)
 void GameStateMainMenuUpdate(void)
 {
 	if (AEInputCheckTriggered(AEVK_1))
-		gGameStateNext = GS_PLATFORM1;
+		gGameStateNext = GS_BATTLE;
 	else if (AEInputCheckTriggered(AEVK_2))
-		gGameStateNext = GS_PLATFORM2;
+		gGameStateNext = GS_DEATHMATCH;
 	else if (AEInputCheckTriggered(AEVK_Q))
 		gGameStateNext = GS_QUIT;
 }

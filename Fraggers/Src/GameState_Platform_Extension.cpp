@@ -103,7 +103,7 @@ void Starting_GameObjectsInstances(void)
 	//Create an object instance representing the black cell.
 	//This object instance should not be visible. When rendering the grid cells, each time we have
 	//a non collision cell, we position this instance in the correct location and then we render it
-	AEVec2 scl = { 1.0f, 1.0f };
+	AEVec2 scl = { 1.f, 1.f };
 	pBlackInstance = gameObjInstCreate(TYPE_OBJECT_EMPTY, &scl, 0, 0, 0.0f);
 	pBlackInstance->flag ^= FLAG_VISIBLE;
 	pBlackInstance->flag |= FLAG_NON_COLLIDABLE;
@@ -121,7 +121,7 @@ void Starting_GameObjectsInstances(void)
 	Player1_Lives = HERO_LIVES;
 	Player2_Lives = HERO_LIVES;
 
-	GameObjInst* pInst = nullptr;
+	//GameObjInst* pInst = nullptr;
 	AEVec2 Pos = { 0.f,0.f };
 
 	// creating the main character, the enemies and the coins according 
@@ -537,21 +537,6 @@ void Update_CameraPosition_Level2(void)
 // =====================================================================
 void Draw_TileMap_BackgroundGrid(void)
 {
-	/*********
-	for each array element in BinaryCollisionArray (2 loops)
-		Each cell needs to be translated by its half width and
-		height. That is why you should compute the cell's translation 
-		matrix according to its X and Y coordinates and save it in 
-		"cellTranslation"
-		Concatenate MapTransform with the cell's transformation
-		and save the result in "cellFinalTransformation"
-		Send "cellFinalTransformation" matrix to the graphics manager using "AEGfxSetTransform"
-
-		Draw the instance's shape depending on the cell's value using "AEGfxMeshDraw"
-			Use the black instance in case the cell's value is TYPE_OBJECT_EMPTY
-			Use the white instance in case the cell's value is TYPE_OBJECT_COLLISION
-	*********/
-
 	int i = 0, j = 0;
 
 	AEMtx33 cellTranslation, cellFinalTransformation;
@@ -571,12 +556,13 @@ void Draw_TileMap_BackgroundGrid(void)
 
 
 			// Draw the shape used by the current object instance using "AEGfxMeshDraw" here
-			if (BinaryCollisionArray[j][i] == TYPE_OBJECT_EMPTY)
+			if (BinaryCollisionArray[BINARY_MAP_HEIGHT - 1 - j][i] == TYPE_OBJECT_EMPTY)
 			{
 				// Draw the black instance for empty cells
 				AEGfxMeshDraw(pBlackInstance->pObject->pMesh, AE_GFX_MDM_TRIANGLES);
 			}
-			else if (BinaryCollisionArray[j][i] == TYPE_OBJECT_COLLISION)
+			else if (BinaryCollisionArray[BINARY_MAP_HEIGHT - 1 - j][i] == TYPE_OBJECT_COLLISION)
+
 			{
 				// Draw the white instance for collision cells
 				AEGfxMeshDraw(pWhiteInstance->pObject->pMesh, AE_GFX_MDM_TRIANGLES);
@@ -978,8 +964,8 @@ void SpawnPlayersRandomly()
 int GenerateRandomMap(void)
 {
 	// Initialize the map dimensions
-	BINARY_MAP_WIDTH = 40;
-	BINARY_MAP_HEIGHT = 40;
+	BINARY_MAP_WIDTH = 20;
+	BINARY_MAP_HEIGHT = 20;
 	// Generate a random map with a solid ground and some floating platforms
 	int width = BINARY_MAP_WIDTH;
 	int height = BINARY_MAP_HEIGHT;
@@ -1001,26 +987,22 @@ int GenerateRandomMap(void)
 	for (int i = 0; i < height; ++i) {
 		for (int j = 0; j < width; ++j) {
 			if (i >= groundHeight) {
-				// Solid ground at the bottom
 				MapData[i][j] = 1;
 			}
 			else if (rand() % 100 < (int)(platformChance * 100)) {
-				// Random floating platform block
-				// Optional: avoid stacking floating blocks vertically
-				if (i > 0 && MapData[i - 1][j] == 0) {
+				if (i > 0 && MapData[i - 1][j] == 0)
 					MapData[i][j] = 1;
-				}
-				else {
+				else
 					MapData[i][j] = 0;
-				}
 			}
 			else {
 				MapData[i][j] = 0;
 			}
-
 			BinaryCollisionArray[i][j] = (MapData[i][j] == 1) ? 1 : 0;
 		}
 	}
+
+
 	SpawnPlayersRandomly();
 	return 1;
 }

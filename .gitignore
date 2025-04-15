@@ -15,3 +15,5 @@
 *.tlog
 *.obj
 *.idb
+*.log
+*.pdb

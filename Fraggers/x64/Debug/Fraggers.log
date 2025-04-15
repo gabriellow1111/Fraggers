@@ -1,11 +1,2 @@
-﻿  AABB_Collision.cpp
-  GameStateMgr.cpp
-  GameState_MainMenu.cpp
-  GameState_Platform.cpp
-  GameState_Platform_Extension.cpp
-  Main.cpp
-  Generating Code...
-GameState_Platform_Extension.obj : error LNK2001: unresolved external symbol "int TotalCoins" (?TotalCoins@@3HA)
-GameState_Platform_Extension.obj : error LNK2001: unresolved external symbol "struct GameObjInst * pBlackInstance" (?pBlackInstance@@3PEAUGameObjInst@@EA)
-GameState_Platform_Extension.obj : error LNK2001: unresolved external symbol "struct GameObjInst * pWhiteInstance" (?pWhiteInstance@@3PEAUGameObjInst@@EA)
-C:\Users\Gabriel\Documents\GitHub\Fraggers\\Bin\FraggersD.exe : fatal error LNK1120: 3 unresolved externals
+﻿  GameState_Platform_Extension.cpp
+  Fraggers.vcxproj -> C:\Users\Gabriel\Documents\GitHub\Fraggers\Bin\FraggersD.exe

@@ -41,6 +41,8 @@ int **			MapData = nullptr;
 int **			BinaryCollisionArray = nullptr;
 int				BINARY_MAP_WIDTH = 0;
 int				BINARY_MAP_HEIGHT = 0;
+GameObjInst* pBlackInstance = nullptr;
+GameObjInst* pWhiteInstance = nullptr;
 AEMtx33			MapTransform;
 
 //We need a pointer to the hero's instance for faster access
@@ -238,28 +240,42 @@ void Load_AllMeshes(void)
 	AE_ASSERT_MESG(pObj->pMesh, "fail to create object!!");
 
 
-	//Creating player 1 object
+	// Creating player 1 object (BLUE, tall)
 	pObj = sGameObjList + sGameObjNum++;
 	pObj->type = TYPE_OBJECT_PLAYER1;
 
+	AEGfxMeshStart();
+	AEGfxTriAdd(
+		-0.5f, -1.0f, 0xFF0000FF, 0.0f, 0.0f,  // Blue
+		0.5f, -1.0f, 0xFF0000FF, 0.0f, 0.0f,
+		-0.5f, 1.0f, 0xFF0000FF, 0.0f, 0.0f);
 
-	//Creating player 2 object
+	AEGfxTriAdd(
+		-0.5f, 1.0f, 0xFF0000FF, 0.0f, 0.0f,
+		0.5f, -1.0f, 0xFF0000FF, 0.0f, 0.0f,
+		0.5f, 1.0f, 0xFF0000FF, 0.0f, 0.0f);
+
+	pObj->pMesh = AEGfxMeshEnd();
+	AE_ASSERT_MESG(pObj->pMesh, "fail to create object!!");
+
+	// Creating player 2 object (RED, tall)
 	pObj = sGameObjList + sGameObjNum++;
 	pObj->type = TYPE_OBJECT_PLAYER2;
 
 	AEGfxMeshStart();
 	AEGfxTriAdd(
-		-0.5f, -0.5f, 0xFFFFFFFF, 0.0f, 0.0f,
-		0.5f, -0.5f, 0xFFFFFFFF, 0.0f, 0.0f,
-		-0.5f, 0.5f, 0xFFFFFFFF, 0.0f, 0.0f);
+		-0.5f, -1.0f, 0xFFFF0000, 0.0f, 0.0f,  // Red
+		0.5f, -1.0f, 0xFFFF0000, 0.0f, 0.0f,
+		-0.5f, 1.0f, 0xFFFF0000, 0.0f, 0.0f);
 
 	AEGfxTriAdd(
-		-0.5f, 0.5f, 0xFFFFFFFF, 0.0f, 0.0f,
-		0.5f, -0.5f, 0xFFFFFFFF, 0.0f, 0.0f,
-		0.5f, 0.5f, 0xFFFFFFFF, 0.0f, 0.0f);
+		-0.5f, 1.0f, 0xFFFF0000, 0.0f, 0.0f,
+		0.5f, -1.0f, 0xFFFF0000, 0.0f, 0.0f,
+		0.5f, 1.0f, 0xFFFF0000, 0.0f, 0.0f);
 
 	pObj->pMesh = AEGfxMeshEnd();
 	AE_ASSERT_MESG(pObj->pMesh, "fail to create object!!");
+
 }
 
 // ----------------------------------------------------------------------------

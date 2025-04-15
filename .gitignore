@@ -1,0 +1,14 @@
+/.vs
+/.tmp
+/bin
+*.vcxproj
+*.vcxproj.filters
+*.ipch
+*.pbd
+*.VC.db
+*.VC.db-shm
+*.VC.db-wal
+*.VC.opendb
+*.vsidx
+*.DS_Store
+*.aps

@@ -81,9 +81,12 @@ void Compute_MapTransformMatrix(void)
 	// Create a translation matrix to center the grid in the viewport.
 	AEMtx33Trans(&trans, -(GRID_WIDTH_IN_VIEWPORT / 2), -(GRID_WIDTH_IN_VIEWPORT / 2));
 
+	// Declare scale factor for the grid
+	int scaleFactor = 2;
+
 	// Create a scaling matrix to scale the grid to fit the window dimensions.
-	AEMtx33Scale(&scale, AEGfxGetWindowWidth() / static_cast<f32>(GRID_WIDTH_IN_VIEWPORT),
-						 AEGfxGetWindowHeight() / static_cast<f32>(GRID_HEIGHT_IN_VIEWPORT));
+	AEMtx33Scale(&scale, AEGfxGetWindowWidth() / static_cast<f32>(GRID_WIDTH_IN_VIEWPORT * scaleFactor),
+						 AEGfxGetWindowHeight() / static_cast<f32>(GRID_HEIGHT_IN_VIEWPORT * scaleFactor));
 
 	// Combine the scaling and translation matrices to form the final transformation matrix.
 	AEMtx33Concat(&MapTransform, &scale, &trans);
@@ -114,6 +117,7 @@ void Starting_GameObjectsInstances(void)
 	pWhiteInstance = gameObjInstCreate(TYPE_OBJECT_COLLISION, &scl, 0, 0, 0.0f);
 	pWhiteInstance->flag ^= FLAG_VISIBLE;
 	pWhiteInstance->flag |= FLAG_NON_COLLIDABLE;
+
 	pPlayer1 = nullptr;
 	pPlayer2 = nullptr;
 

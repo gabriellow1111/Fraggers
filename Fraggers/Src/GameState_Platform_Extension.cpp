@@ -70,23 +70,46 @@ void Compute_MapTransformMatrix(void)
 	Concatenate scale and translate and save the result in "MapTransform"
 	***********/
 
-	// Declare transformation matrices for scaling and translation.
+	//// Declare transformation matrices for scaling and translation.
+	//AEMtx33 scale, trans;
+
+	//// Set grid visible in viewport to same as map size
+
+	//// Create a translation matrix to center the grid in the viewport.
+	//AEMtx33Trans(&trans, static_cast<f32>(-(BINARY_MAP_HEIGHT / 2)), static_cast<f32>(-(BINARY_MAP_WIDTH / 2)));
+
+	//// Declare scale factor for the grid
+	//int scaleFactor = 1;
+
+	//// Create a scaling matrix to scale the grid to fit the window dimensions.
+	//AEMtx33Scale(&scale, AEGfxGetWindowWidth() / static_cast<f32>(BINARY_MAP_WIDTH * scaleFactor),
+	//					 AEGfxGetWindowHeight() / static_cast<f32>(BINARY_MAP_HEIGHT * scaleFactor));
+
+	//// Combine the scaling and translation matrices to form the final transformation matrix.
+	//AEMtx33Concat(&MapTransform, &scale, &trans);
+
+	// New tile size (smaller)
+	float TILE_SIZE = static_cast<f32>(AEGfxGetWindowWidth() / BINARY_MAP_WIDTH);
+
+	// Map size in pixels based on tile size
+	float mapPixelWidth = BINARY_MAP_WIDTH * TILE_SIZE;
+	float mapPixelHeight = BINARY_MAP_HEIGHT * TILE_SIZE;
+
+	// Center map in the middle of the screen
+	float screenCenterX = AEGfxGetWindowWidth() / 2.0f;
+	float screenCenterY = AEGfxGetWindowHeight() / 2.0f;
+
+	float mapOffsetX = screenCenterX - mapPixelWidth;
+	float mapOffsetY = screenCenterY - mapPixelHeight;
+
+	// Build transformation matrices
 	AEMtx33 scale, trans;
+	AEMtx33Scale(&scale, static_cast<f32>(TILE_SIZE), static_cast<f32>(TILE_SIZE));  // Scale to 8px per tile
+	AEMtx33Trans(&trans, mapOffsetX, mapOffsetY);  // Translate to center the map
 
-	// Set grid visible in viewport to same as map size
+	// Combine: translate first, then scale
+	AEMtx33Concat(&MapTransform, &trans, &scale);
 
-	// Create a translation matrix to center the grid in the viewport.
-	AEMtx33Trans(&trans, static_cast<f32>(-(BINARY_MAP_HEIGHT / 2)), static_cast<f32>(-(BINARY_MAP_WIDTH / 2)));
-
-	// Declare scale factor for the grid
-	int scaleFactor = 1;
-
-	// Create a scaling matrix to scale the grid to fit the window dimensions.
-	AEMtx33Scale(&scale, AEGfxGetWindowWidth() / static_cast<f32>(BINARY_MAP_WIDTH * scaleFactor),
-						 AEGfxGetWindowHeight() / static_cast<f32>(BINARY_MAP_HEIGHT * scaleFactor));
-
-	// Combine the scaling and translation matrices to form the final transformation matrix.
-	AEMtx33Concat(&MapTransform, &scale, &trans);
 }
 
 // =========================================================
@@ -150,13 +173,13 @@ void Starting_GameObjectsInstances(void)
 			Set its position depending on its array indices in MapData
 
 	***********/
-	scl = { 1.f, 2.f };
+	scl = { 2.f, 4.f };
 	// Loop through each cell in the binary map grid.
 	for (i = 0; i < BINARY_MAP_WIDTH; ++i)
 		for (j = 0; j < BINARY_MAP_HEIGHT; ++j)
 		{
 			// Set the position of the current cell in the world space.
-			AEVec2Set(&Pos, (f32)i + 0.5f, (f32)j + 0.5f);
+			AEVec2Set(&Pos, (f32)i + 0.5f, (f32)j + 1.01f);
 
 			// Check the type of object in the current map cell.
 			switch (MapData[j][i]) 
@@ -319,6 +342,8 @@ void Update_Positions(void)
 		AEVec2 added;
 		AEVec2Set(&added, pInst->velCurr.x * (float)g_dt, pInst->velCurr.y * (float)g_dt); // Position = Velocity * deltaTime
 		AEVec2Add(&pInst->posCurr, &pInst->posCurr, &added); // Update position
+		/*if (pInst->pObject->type == TYPE_OBJECT_PLAYER1)
+			std::cout << "Position: " << pInst->posCurr.x << ", " << pInst->posCurr.y << std::endl;*/
 	}
 }
 
@@ -342,6 +367,7 @@ void Check_GridBinaryCollision(void)
 			continue;
 		if (pInst->pObject->type != TYPE_OBJECT_PLAYER1 && pInst->pObject->type != TYPE_OBJECT_PLAYER2)
 			continue;
+
 
 		// Collision response:
 		pInst->gridCollisionFlag = CheckInstanceBinaryMapCollision(pInst->posCurr.x, pInst->posCurr.y, pInst->scale.x, pInst->scale.y);
@@ -380,7 +406,6 @@ void Check_GridBinaryCollision(void)
 			pInst->velCurr.x = 0;
 			std::cout << "Right Collision Detected" << std::endl;
 		}
-
 	}
 }
 
@@ -729,48 +754,45 @@ int CheckInstanceBinaryMapCollision(float PosX, float PosY, float scaleX, float 
 
 	int Flag = 0;
 
-	// Check for left side
-	float x1 = PosX - scaleX / 2 * 0.9;
-	float y1 = PosY + scaleY / 4 * 0.9;
-	float x2 = PosX - scaleX / 2 * 0.9;
-	float y2 = PosY - scaleY / 4 * 0.9;
+	const int numVerticalSamples = 4;
+	for (int i = 0; i < numVerticalSamples; ++i) {
+		float t = (float)(i + 1) / (numVerticalSamples + 1); // avoids very top and bottom
+		float sampleY = PosY + scaleY / 2 - scaleY * t; // from top to bottom, offset inwards
 
-	if (GetCellValue(static_cast<int>(x1), static_cast<int>(y1)) == 1 ||
-		GetCellValue(static_cast<int>(x2), static_cast<int>(y2)) == 1) {
-		Flag |= COLLISION_LEFT; // Set the left collision bit
+		// LEFT
+		float leftX = PosX - scaleX / 2 * 0.99f;
+		if (GetCellValue((int)leftX, (int)sampleY) == 1)
+			Flag |= COLLISION_LEFT;
+
+		// RIGHT
+		float rightX = PosX + scaleX / 2 * 0.99f;
+		if (GetCellValue((int)rightX, (int)sampleY) == 1)
+			Flag |= COLLISION_RIGHT;
 	}
 
-	// Check for right side
-	x1 = PosX + scaleX / 2 * 0.9;
-	y1 = PosY + scaleY / 4 * 0.9;
-	x2 = PosX + scaleX / 2 * 0.9;
-	y2 = PosY - scaleY / 4 * 0.9;
-
-	if (GetCellValue(static_cast<int>(x1), static_cast<int>(y1)) == 1 ||
-		GetCellValue(static_cast<int>(x2), static_cast<int>(y2)) == 1) {
-		Flag |= COLLISION_RIGHT; // Set the right collision bit
-	}
 
 	// Check for top side
-	x1 = PosX + scaleX / 2 * 0.9;
-	y1 = PosY + scaleY / 2;
-	x2 = PosX - scaleX / 2 * 0.9;
-	y2 = PosY + scaleY / 2;
+	float topY = PosY + scaleY / 2 * 0.99f;
+	float x1 = PosX - scaleX * 3 / 8.0f;
+	float x2 = PosX - scaleX / 4.0f;
+	float x3 = PosX + scaleX / 4.0f;
+	float x4 = PosX + scaleX * 3 / 8.0f;
 
-	if (GetCellValue(static_cast<int>(x1), static_cast<int>(y1)) == 1 ||
-		GetCellValue(static_cast<int>(x2), static_cast<int>(y2)) == 1) {
-		Flag |= COLLISION_TOP; // Set the top collision bit
+	if (GetCellValue((int)x1, (int)topY) == 1 ||
+		GetCellValue((int)x2, (int)topY) == 1 ||
+		GetCellValue((int)x3, (int)topY) == 1 ||
+		GetCellValue((int)x4, (int)topY) == 1) {
+		Flag |= COLLISION_TOP;
 	}
 
 	// Check for bottom side
-	x1 = PosX + scaleX / 4;
-	y1 = PosY - scaleY / 2;
-	x2 = PosX - scaleX / 4;
-	y2 = PosY - scaleY / 2;
+	float bottomY = PosY - scaleY / 2 * 0.99f;
 
-	if (GetCellValue(static_cast<int>(x1), static_cast<int>(y1)) == 1 ||
-		GetCellValue(static_cast<int>(x2), static_cast<int>(y2)) == 1) {
-		Flag |= COLLISION_BOTTOM; // Set the bottom collision bit
+	if (GetCellValue((int)x1, (int)bottomY) == 1 ||
+		GetCellValue((int)x2, (int)bottomY) == 1 ||
+		GetCellValue((int)x3, (int)bottomY) == 1 ||
+		GetCellValue((int)x4, (int)bottomY) == 1) {
+		Flag |= COLLISION_BOTTOM;
 	}
 
 	return Flag;
@@ -849,7 +871,7 @@ void SpawnPlayers()
 		int y = rand() % (BINARY_MAP_HEIGHT - 3); // avoid bottom row
 
 		// Valid if current tile is empty and tile below is solid
-		if (MapData[y][x] == 0 && MapData[y - 1][x] == 1 && MapData[y + 1][x] != 1) {
+		if (MapData[y][x] == 0 && MapData[y - 2][x] == 1 && MapData[y + 1][x] != 1 && MapData[y + 2][x] != 1) {
 			if (!player1Spawned) {
 				MapData[y][x] = 2;
 				player1Spawned = true;
@@ -880,8 +902,8 @@ int GenerateRandomMap(void)
 	}
 
 	// Parameters
-	int groundHeight = 3; // ground starts 3 rows from the bottom
-	float platformChance = 0.1f;   // 10% chance to spawn a floating platform block
+	int groundHeight = 10; // ground starts 3 rows from the bottom
+	float platformChance = 0.01f;   // 10% chance to spawn a floating platform block
 
 	for (int i = 0; i < height; ++i) {
 		for (int j = 0; j < width; ++j) {

@@ -39,8 +39,8 @@ unsigned int	sGameObjInstNum = 0;
 //Binary map data
 int **			MapData = nullptr;
 int **			BinaryCollisionArray = nullptr;
-int				BINARY_MAP_WIDTH = 50;
-int				BINARY_MAP_HEIGHT = 50;
+int				BINARY_MAP_WIDTH = 160;
+int				BINARY_MAP_HEIGHT = 90;
 GameObjInst* pBlackInstance = nullptr;
 GameObjInst* pWhiteInstance = nullptr;
 AEMtx33			MapTransform;

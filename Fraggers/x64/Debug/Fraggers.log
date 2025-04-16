@@ -1,12 +1,2 @@
 ﻿  GameState_Platform_Extension.cpp
-D:\Github\Fraggers\Fraggers\Src\GameState_Platform_Extension.cpp(744,11): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-D:\Github\Fraggers\Fraggers\Src\GameState_Platform_Extension.cpp(745,11): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-D:\Github\Fraggers\Fraggers\Src\GameState_Platform_Extension.cpp(746,11): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-D:\Github\Fraggers\Fraggers\Src\GameState_Platform_Extension.cpp(747,11): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-D:\Github\Fraggers\Fraggers\Src\GameState_Platform_Extension.cpp(755,12): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-D:\Github\Fraggers\Fraggers\Src\GameState_Platform_Extension.cpp(756,12): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-D:\Github\Fraggers\Fraggers\Src\GameState_Platform_Extension.cpp(757,12): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-D:\Github\Fraggers\Fraggers\Src\GameState_Platform_Extension.cpp(758,12): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-D:\Github\Fraggers\Fraggers\Src\GameState_Platform_Extension.cpp(766,12): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-D:\Github\Fraggers\Fraggers\Src\GameState_Platform_Extension.cpp(768,12): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
   Fraggers.vcxproj -> D:\Github\Fraggers\Bin\FraggersD.exe

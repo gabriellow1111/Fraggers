@@ -27,10 +27,10 @@ const unsigned int	GAME_OBJ_NUM_MAX = 32;				//The total number of different obj
 const unsigned int	GAME_OBJ_INST_NUM_MAX = 2048;		//The total number of different game object instances
 
 //Gameplay related variables and values
-const float			GRAVITY = -20.0f;
-const float			JUMP_VELOCITY = 15.0f;
-const float			MOVE_VELOCITY_HERO = 5.0f;
-const float			MOVE_VELOCITY_ENEMY = 5.0f;
+const float			GRAVITY = -60.0f;
+const float			JUMP_VELOCITY = 30.0f;
+const float			MOVE_VELOCITY_HERO = 20.0f;
+const float			MOVE_VELOCITY_ENEMY = 20.0f;
 const double		ENEMY_IDLE_TIME = 2.0;				//Enemy idle time in seconds, before changing direction
 const int			HERO_LIVES = 3;
 const int			GRID_WIDTH_IN_VIEWPORT = 20;		//Number of grid cells, visible in the viewport along the x-axis

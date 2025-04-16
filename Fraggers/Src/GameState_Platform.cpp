@@ -41,8 +41,8 @@ int **			MapData = nullptr;
 int **			BinaryCollisionArray = nullptr;
 int				BINARY_MAP_WIDTH = 160;
 int				BINARY_MAP_HEIGHT = 90;
-GameObjInst* pBlackInstance = nullptr;
-GameObjInst* pWhiteInstance = nullptr;
+GameObjInst*	pBlackInstance = nullptr;
+GameObjInst*	pWhiteInstance = nullptr;
 AEMtx33			MapTransform;
 
 //We need a pointer to the hero's instance for faster access
@@ -204,14 +204,14 @@ void Load_AllMeshes(void)
 
 	AEGfxMeshStart();
 	AEGfxTriAdd(
-		-0.5f, -0.5f, 0xFF000000, 0.0f, 0.0f,
-		0.5f, -0.5f, 0xFF000000, 0.0f, 0.0f,
-		-0.5f, 0.5f, 0xFF000000, 0.0f, 0.0f);
+		-0.5f, -0.5f, 0xFF87CEEB, 0.0f, 0.0f,
+		0.5f, -0.5f, 0xFF87CEEB, 0.0f, 0.0f,
+		-0.5f, 0.5f, 0xFF87CEEB, 0.0f, 0.0f);
 
 	AEGfxTriAdd(
-		-0.5f, 0.5f, 0xFF000000, 0.0f, 0.0f,
-		0.5f, -0.5f, 0xFF000000, 0.0f, 0.0f,
-		0.5f, 0.5f, 0xFF000000, 0.0f, 0.0f);
+		-0.5f, 0.5f, 0xFF87CEEB, 0.0f, 0.0f,
+		0.5f, -0.5f, 0xFF87CEEB, 0.0f, 0.0f,
+		0.5f, 0.5f, 0xFF87CEEB, 0.0f, 0.0f);
 
 	pObj->pMesh = AEGfxMeshEnd();
 	AE_ASSERT_MESG(pObj->pMesh, "fail to create object!!");
@@ -224,14 +224,14 @@ void Load_AllMeshes(void)
 
 	AEGfxMeshStart();
 	AEGfxTriAdd(
-		-0.5f, -0.5f, 0xFFFFFFFF, 0.0f, 0.0f,
-		0.5f, -0.5f, 0xFFFFFFFF, 0.0f, 0.0f,
-		-0.5f, 0.5f, 0xFFFFFFFF, 0.0f, 0.0f);
+		-0.5f, -0.5f, 0xFF8B4513, 0.0f, 0.0f,
+		0.5f, -0.5f, 0xFF8B4513, 0.0f, 0.0f,
+		-0.5f, 0.5f, 0xFF8B4513, 0.0f, 0.0f);
 
 	AEGfxTriAdd(
-		-0.5f, 0.5f, 0xFFFFFFFF, 0.0f, 0.0f,
-		0.5f, -0.5f, 0xFFFFFFFF, 0.0f, 0.0f,
-		0.5f, 0.5f, 0xFFFFFFFF, 0.0f, 0.0f);
+		-0.5f, 0.5f, 0xFF8B4513, 0.0f, 0.0f,
+		0.5f, -0.5f, 0xFF8B4513, 0.0f, 0.0f,
+		0.5f, 0.5f, 0xFF8B4513, 0.0f, 0.0f);
 
 	pObj->pMesh = AEGfxMeshEnd();
 	AE_ASSERT_MESG(pObj->pMesh, "fail to create object!!");
@@ -312,6 +312,8 @@ GameObjInst* gameObjInstCreate( unsigned long type,
 			pInst->innerState		 = INNER_STATE_ON_ENTER;
 			pInst->idle_counter		 = 0;
 			pInst->lifetime			 = 0.0f;
+			pInst->jumpCount		 = 0;
+			pInst->maxJumps			 = 1;
 			
 			// return the newly created instance
 			return pInst;

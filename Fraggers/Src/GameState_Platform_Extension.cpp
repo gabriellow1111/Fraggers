@@ -1,18 +1,3 @@
-/* Start Header ************************************************************************/
-/*!
-\file		GameState_Platform_Extension.cpp
-\author 	Gabriel Low, gabriel.low, 620006124
-\par    	gabriel.low@digipen.edu
-\date   	7 March 2025
-\brief		This file implements important helper functions and
-			essential functions for the platform game state implementation.
-
-Copyright (C) 2025 DigiPen Institute of Technology.
-Reproduction or disclosure of this file or its contents
-without the prior written consent of DigiPen Institute of
-Technology is prohibited.
-*/
-/* End Header **************************************************************************/
 
 #include "GameState_Platform_Extension.h"
 #include <iostream>
@@ -54,41 +39,7 @@ void Import_MapData(void)
 // =========================================================
 void Compute_MapTransformMatrix(void)
 {
-	//Computing the matrix which take a point out of the normalized coordinates system
-	//of the binary map
-	/***********
-	Compute a transformation matrix and save it in "MapTransform".
-	This transformation transforms any point from the normalized coordinates system of the binary map.
-	Later on, when rendering each object instance, we should concatenate "MapTransform" with the
-	object instance's own transformation matrix
-
-	Compute a translation matrix (-GRID_WIDTH_IN_VIEWPORT/2, -GRID_WIDTH_IN_VIEWPORT/2) and save it in "trans"
-	Compute a scaling matrix and save it in "scale". 
-		The scale must account for the window width and height.
-		Alpha engine has 2 helper functions to get the window width and height: AEGfxGetWindowWidth() and AEGfxGetWindowHeight()
-		Example: scale along x-axis = AEGfxGetWindowWidth() / static_cast<f32>(GRID_WIDTH_IN_VIEWPORT)
-	Concatenate scale and translate and save the result in "MapTransform"
-	***********/
-
-	//// Declare transformation matrices for scaling and translation.
-	//AEMtx33 scale, trans;
-
-	//// Set grid visible in viewport to same as map size
-
-	//// Create a translation matrix to center the grid in the viewport.
-	//AEMtx33Trans(&trans, static_cast<f32>(-(BINARY_MAP_HEIGHT / 2)), static_cast<f32>(-(BINARY_MAP_WIDTH / 2)));
-
-	//// Declare scale factor for the grid
-	//int scaleFactor = 1;
-
-	//// Create a scaling matrix to scale the grid to fit the window dimensions.
-	//AEMtx33Scale(&scale, AEGfxGetWindowWidth() / static_cast<f32>(BINARY_MAP_WIDTH * scaleFactor),
-	//					 AEGfxGetWindowHeight() / static_cast<f32>(BINARY_MAP_HEIGHT * scaleFactor));
-
-	//// Combine the scaling and translation matrices to form the final transformation matrix.
-	//AEMtx33Concat(&MapTransform, &scale, &trans);
-
-	// New tile size (smaller)
+	// Tile size
 	float TILE_SIZE = static_cast<f32>(AEGfxGetWindowWidth() / BINARY_MAP_WIDTH);
 
 	// Map size in pixels based on tile size
@@ -148,31 +99,6 @@ void Starting_GameObjectsInstances(void)
 	//GameObjInst* pInst = nullptr;
 	AEVec2 Pos = { 0.f,0.f };
 
-	// creating the main character, the enemies and the coins according 
-	// to their initial positions in MapData
-
-	/***********
-	Loop through all the array elements of MapData
-	(which was initialized in the "GameStatePlatformLoad" function
-	from the .txt file)
-		if the element represents a collidable or non collidable area
-			don't do anything
-
-		if the element represents the hero
-			Create a hero instance
-			Set its position depending on its array indices in MapData
-			Save its array indices in Hero_Initial_X and Hero_Initial_Y
-			(Used when the hero dies and its position needs to be reset)
-
-		if the element represents an enemy
-			Create an enemy instance
-			Set its position depending on its array indices in MapData
-
-		if the element represents a coin
-			Create a coin instance
-			Set its position depending on its array indices in MapData
-
-	***********/
 	scl = { 2.f, 4.f };
 	// Loop through each cell in the binary map grid.
 	for (i = 0; i < BINARY_MAP_WIDTH; ++i)
@@ -228,12 +154,15 @@ void Update_Input_Physics(void)
 		pPlayer1->velCurr.x = 0.f; // Stop horizontal movement if no keys are pressed.
 	}
 	
-
 	if (AEInputCheckTriggered(AEVK_W))//DO NOT change or update or duplicate this input code line! Otherwise penalties may apply!
 	{
-		// Allow jumping only if the hero is standing on the ground.
 		if (pPlayer1->gridCollisionFlag & COLLISION_BOTTOM) {
+			pPlayer1->velCurr.y = JUMP_VELOCITY;
+		}
+		else if (pPlayer1->jumpCount < pPlayer1->maxJumps) // Check if player can double jump
+		{
 			pPlayer1->velCurr.y = JUMP_VELOCITY; // Apply jump velocity.
+			pPlayer1->jumpCount++; // Increment jump count
 		}
 	}
 	
@@ -255,11 +184,14 @@ void Update_Input_Physics(void)
 
 	if (AEInputCheckTriggered(AEVK_UP))//DO NOT change or update or duplicate this input code line! Otherwise penalties may apply!
 	{
-		// Allow jumping only if the hero is standing on the ground.
 		if (pPlayer2->gridCollisionFlag & COLLISION_BOTTOM) {
-			pPlayer2->velCurr.y = JUMP_VELOCITY; // Apply jump velocity.
+			pPlayer2->velCurr.y = JUMP_VELOCITY;
 		}
-
+		else if (pPlayer2->jumpCount < pPlayer2->maxJumps) // Check if player can double jump
+		{
+			pPlayer2->velCurr.y = JUMP_VELOCITY; // Apply jump velocity.
+			pPlayer2->jumpCount++; // Increment jump count
+		}
 	}
 	if (AEInputCheckTriggered(AEVK_ESCAPE))//DO NOT change or update or duplicate this input code line! Otherwise penalties may apply!
 	{		
@@ -405,6 +337,12 @@ void Check_GridBinaryCollision(void)
 			SnapRightCollision(&pInst->posCurr.x, pInst->scale.x);
 			pInst->velCurr.x = 0;
 			std::cout << "Right Collision Detected" << std::endl;
+		}
+
+		// Reset jump count if the player is on the ground
+		if (pInst->gridCollisionFlag & COLLISION_BOTTOM)
+		{
+			pInst->jumpCount = 0; // Reset jump count
 		}
 	}
 }
@@ -772,7 +710,7 @@ int CheckInstanceBinaryMapCollision(float PosX, float PosY, float scaleX, float 
 
 
 	// Check for top side
-	float topY = PosY + scaleY / 2 * 0.99f;
+	float topY = PosY + scaleY / 2;
 	float x1 = PosX - scaleX * 3 / 8.0f;
 	float x2 = PosX - scaleX / 4.0f;
 	float x3 = PosX + scaleX / 4.0f;
@@ -786,7 +724,7 @@ int CheckInstanceBinaryMapCollision(float PosX, float PosY, float scaleX, float 
 	}
 
 	// Check for bottom side
-	float bottomY = PosY - scaleY / 2 * 0.99f;
+	float bottomY = PosY - scaleY / 2;
 
 	if (GetCellValue((int)x1, (int)bottomY) == 1 ||
 		GetCellValue((int)x2, (int)bottomY) == 1 ||

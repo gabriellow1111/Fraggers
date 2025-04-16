@@ -39,8 +39,8 @@ unsigned int	sGameObjInstNum = 0;
 //Binary map data
 int **			MapData = nullptr;
 int **			BinaryCollisionArray = nullptr;
-int				BINARY_MAP_WIDTH = 0;
-int				BINARY_MAP_HEIGHT = 0;
+int				BINARY_MAP_WIDTH = 100;
+int				BINARY_MAP_HEIGHT = 100;
 GameObjInst* pBlackInstance = nullptr;
 GameObjInst* pWhiteInstance = nullptr;
 AEMtx33			MapTransform;
@@ -99,8 +99,6 @@ void GameStatePlatformUpdate(void)
 {
 	int i = 0;
 	GameObjInst *pInst = nullptr;
-
-	UNREFERENCED_PARAMETER(pInst);
 
 	Update_Input_Physics();	
 
@@ -246,14 +244,14 @@ void Load_AllMeshes(void)
 
 	AEGfxMeshStart();
 	AEGfxTriAdd(
-		-0.5f, -1.0f, 0xFF0000FF, 0.0f, 0.0f,  // Blue
-		0.5f, -1.0f, 0xFF0000FF, 0.0f, 0.0f,
-		-0.5f, 1.0f, 0xFF0000FF, 0.0f, 0.0f);
+		-0.5f, -0.5f, 0xFF0000FF, 0.0f, 0.0f,  // Blue
+		0.5f, -0.5f, 0xFF0000FF, 0.0f, 0.0f,
+		-0.5f, 0.5f, 0xFF0000FF, 0.0f, 0.0f);
 
 	AEGfxTriAdd(
-		-0.5f, 1.0f, 0xFF0000FF, 0.0f, 0.0f,
-		0.5f, -1.0f, 0xFF0000FF, 0.0f, 0.0f,
-		0.5f, 1.0f, 0xFF0000FF, 0.0f, 0.0f);
+		-0.5f, 0.5f, 0xFF0000FF, 0.0f, 0.0f,
+		0.5f, -0.5f, 0xFF0000FF, 0.0f, 0.0f,
+		0.5f, 0.5f, 0xFF0000FF, 0.0f, 0.0f);
 
 	pObj->pMesh = AEGfxMeshEnd();
 	AE_ASSERT_MESG(pObj->pMesh, "fail to create object!!");
@@ -264,14 +262,14 @@ void Load_AllMeshes(void)
 
 	AEGfxMeshStart();
 	AEGfxTriAdd(
-		-0.5f, -1.0f, 0xFFFF0000, 0.0f, 0.0f,  // Red
-		0.5f, -1.0f, 0xFFFF0000, 0.0f, 0.0f,
-		-0.5f, 1.0f, 0xFFFF0000, 0.0f, 0.0f);
+		-0.5f, -0.5f, 0xFFFF0000, 0.0f, 0.0f,  // Red
+		0.5f, -0.5f, 0xFFFF0000, 0.0f, 0.0f,
+		-0.5f, 0.5f, 0xFFFF0000, 0.0f, 0.0f);
 
 	AEGfxTriAdd(
-		-0.5f, 1.0f, 0xFFFF0000, 0.0f, 0.0f,
-		0.5f, -1.0f, 0xFFFF0000, 0.0f, 0.0f,
-		0.5f, 1.0f, 0xFFFF0000, 0.0f, 0.0f);
+		-0.5f, 0.5f, 0xFFFF0000, 0.0f, 0.0f,
+		0.5f, -0.5f, 0xFFFF0000, 0.0f, 0.0f,
+		0.5f, 0.5f, 0xFFFF0000, 0.0f, 0.0f);
 
 	pObj->pMesh = AEGfxMeshEnd();
 	AE_ASSERT_MESG(pObj->pMesh, "fail to create object!!");

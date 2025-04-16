@@ -31,15 +31,10 @@ void Import_MapData(void)
 	//Setting intital binary map values
 	MapData = nullptr;
 	BinaryCollisionArray = nullptr;
-	BINARY_MAP_WIDTH = 0;
-	BINARY_MAP_HEIGHT = 0;
 
 	// LEVEL 1
 	if (gGameStateCurr == GS_BATTLE)
 	{
-		//Importing Data - Must Quit the application if "ImportMapDataFromFile" fails
-		/*if (!ImportMapDataFromFile("..\\Resources\\Levels\\Exported.txt"))
-			gGameStateNext = GS_QUIT;*/
 		GenerateRandomMap();
 	}
 
@@ -78,15 +73,17 @@ void Compute_MapTransformMatrix(void)
 	// Declare transformation matrices for scaling and translation.
 	AEMtx33 scale, trans;
 
+	// Set grid visible in viewport to same as map size
+
 	// Create a translation matrix to center the grid in the viewport.
-	AEMtx33Trans(&trans, -(GRID_WIDTH_IN_VIEWPORT / 2), -(GRID_WIDTH_IN_VIEWPORT / 2));
+	AEMtx33Trans(&trans, static_cast<f32>(-(BINARY_MAP_HEIGHT / 2)), static_cast<f32>(-(BINARY_MAP_WIDTH / 2)));
 
 	// Declare scale factor for the grid
-	int scaleFactor = 2;
+	int scaleFactor = 1;
 
 	// Create a scaling matrix to scale the grid to fit the window dimensions.
-	AEMtx33Scale(&scale, AEGfxGetWindowWidth() / static_cast<f32>(GRID_WIDTH_IN_VIEWPORT * scaleFactor),
-						 AEGfxGetWindowHeight() / static_cast<f32>(GRID_HEIGHT_IN_VIEWPORT * scaleFactor));
+	AEMtx33Scale(&scale, AEGfxGetWindowWidth() / static_cast<f32>(BINARY_MAP_WIDTH * scaleFactor),
+						 AEGfxGetWindowHeight() / static_cast<f32>(BINARY_MAP_HEIGHT * scaleFactor));
 
 	// Combine the scaling and translation matrices to form the final transformation matrix.
 	AEMtx33Concat(&MapTransform, &scale, &trans);
@@ -560,12 +557,12 @@ void Draw_TileMap_BackgroundGrid(void)
 
 
 			// Draw the shape used by the current object instance using "AEGfxMeshDraw" here
-			if (BinaryCollisionArray[BINARY_MAP_HEIGHT - 1 - j][i] == TYPE_OBJECT_EMPTY)
+			if (BinaryCollisionArray[j][i] == TYPE_OBJECT_EMPTY)
 			{
 				// Draw the black instance for empty cells
 				AEGfxMeshDraw(pBlackInstance->pObject->pMesh, AE_GFX_MDM_TRIANGLES);
 			}
-			else if (BinaryCollisionArray[BINARY_MAP_HEIGHT - 1 - j][i] == TYPE_OBJECT_COLLISION)
+			else if (BinaryCollisionArray[j][i] == TYPE_OBJECT_COLLISION)
 
 			{
 				// Draw the white instance for collision cells
@@ -685,130 +682,6 @@ void Free_AllAllocatedMemory(void)
 		}
 		delete[] BinaryCollisionArray;
 		BinaryCollisionArray = nullptr;
-	}
-}
-
-// ----------------------------------------------------------------------------
-//
-// this state machine is used by an enemy to move left and right on a platform.
-//
-// ----------------------------------------------------------------------------
-void EnemyStateMachine(GameObjInst* pInst)
-{
-	/***********
-	This state machine has 2 states: STATE_GOING_LEFT and STATE_GOING_RIGHT
-	Each state has 3 inner states: INNER_STATE_ON_ENTER, INNER_STATE_ON_UPDATE, INNER_STATE_ON_EXIT
-	Use "switch" statements to determine which state and inner state the enemy is currently in.
-
-
-	STATE_GOING_LEFT
-		INNER_STATE_ON_ENTER
-			Set velocity X to -MOVE_VELOCITY_ENEMY
-			Set inner state to "on update"
-
-		INNER_STATE_ON_UPDATE
-			If collision on left side OR bottom left cell is non collidable
-				Initialize the counter to ENEMY_IDLE_TIME
-				Set inner state to on exit
-				Set velocity X to 0
-				Snap to cell the position along the x-axis
-
-
-		INNER_STATE_ON_EXIT
-			Decrement counter by frame time
-			if counter is less than 0 (sprite's idle time is over)
-				Set state to "going right"
-				Set inner state to "on enter"
-
-	STATE_GOING_RIGHT is basically the same, with few modifications.
-
-	***********/
-
-	// Ensure the instance is valid
-	if (!pInst) return;
-	
-	switch (pInst->state)
-	{
-	case STATE_GOING_LEFT:
-	{
-		switch (pInst->innerState)
-		{
-		case INNER_STATE_ON_ENTER:
-			pInst->velCurr.x = -MOVE_VELOCITY_ENEMY; // Move left
-			pInst->innerState = INNER_STATE_ON_UPDATE; // Switch to update state
-			break;
-
-		case INNER_STATE_ON_UPDATE:
-			// Check if enemy collides on left OR bottom left tile is not walkable
-			if(pInst->gridCollisionFlag & COLLISION_LEFT || 
-				!(CheckInstanceBinaryMapCollision(
-				pInst->posCurr.x - pInst->scale.x / 2,
-				pInst->posCurr.y - pInst->scale.y / 2,
-				pInst->scale.x, 
-				pInst->scale.y) & COLLISION_BOTTOM))
-			{
-				pInst->idle_counter = ENEMY_IDLE_TIME; // Initialize idle counter
-				pInst->innerState = INNER_STATE_ON_EXIT;
-				pInst->velCurr.x = 0; // Stop movement
-				SnapToCell(&pInst->posCurr.x);
-			}
-			break;
-
-		case INNER_STATE_ON_EXIT:
-			pInst->idle_counter -= (float)g_dt; // Reduce idle counter
-			if (pInst->idle_counter <= 0.0f)
-			{
-				pInst->state = STATE_GOING_RIGHT; // Switch to right movement
-				pInst->innerState = INNER_STATE_ON_ENTER; // Reset inner state
-			}
-			break;
-		}
-		break;
-	}
-
-	case STATE_GOING_RIGHT:
-	{
-		switch (pInst->innerState)
-		{
-		case INNER_STATE_ON_ENTER:
-			pInst->velCurr.x = MOVE_VELOCITY_ENEMY; // Move right
-			pInst->innerState = INNER_STATE_ON_UPDATE; // Switch to update state
-			break;
-
-		case INNER_STATE_ON_UPDATE:
-			// Check if enemy collides on right OR bottom right tile is not walkable
-
-			if (pInst->gridCollisionFlag & COLLISION_RIGHT ||
-				!(CheckInstanceBinaryMapCollision(
-					pInst->posCurr.x + pInst->scale.x / 2,
-					pInst->posCurr.y - pInst->scale.y / 2,
-					pInst->scale.x,
-					pInst->scale.y) & COLLISION_BOTTOM))
-			{
-				pInst->idle_counter = ENEMY_IDLE_TIME; // Initialize idle counter
-				pInst->innerState = INNER_STATE_ON_EXIT;
-				pInst->velCurr.x = 0; // Stop movement
-				SnapToCell(&pInst->posCurr.x);
-			}
-			break;
-
-		case INNER_STATE_ON_EXIT:
-			pInst->idle_counter -= (float)g_dt; // Reduce idle counter
-			if (pInst->idle_counter <= 0.0f)
-			{
-				pInst->state = STATE_GOING_LEFT; // Switch to right movement
-				pInst->innerState = INNER_STATE_ON_ENTER; // Reset inner state
-			}
-			break;
-		}
-		break;
-	}
-
-	default:
-		// Set an initial state if uninitialized
-		pInst->state = STATE_GOING_LEFT;
-		pInst->innerState = INNER_STATE_ON_ENTER;
-		break;
 	}
 }
 
@@ -937,28 +810,26 @@ void SnapToCell(float* Coordinate)
 	*Coordinate = static_cast<float>(integralPart) + 0.5f;
 }
 
-void SpawnPlayersRandomly()
+void SpawnPlayers()
 {
-	int player1Spawned = 0;
-	int player2Spawned = 0;
-
-	srand((unsigned int)time(NULL)); // Seed RNG if not already done
+	bool player1Spawned = false;
+	bool player2Spawned = false;
 
 	while (!player1Spawned || !player2Spawned) {
 		int x = rand() % BINARY_MAP_WIDTH;
-		int y = rand() % (BINARY_MAP_HEIGHT - 1); // avoid bottom row
+		int y = rand() % (BINARY_MAP_HEIGHT - 3); // avoid bottom row
 
 		// Valid if current tile is empty and tile below is solid
-		if (MapData[y][x] == 0 && MapData[y + 1][x] == 1) {
+		if (MapData[y][x] == 0 && MapData[y - 1][x] == 1) {
 			if (!player1Spawned) {
 				MapData[y][x] = 2;
-				player1Spawned = 1;
+				player1Spawned = true;
 			}
 			else if (!player2Spawned) {
 				// Don't spawn both players on same tile
 				if (MapData[y][x] == 0) {
 					MapData[y][x] = 3;
-					player2Spawned = 1;
+					player2Spawned = true;
 				}
 			}
 		}
@@ -967,9 +838,6 @@ void SpawnPlayersRandomly()
 
 int GenerateRandomMap(void)
 {
-	// Initialize the map dimensions
-	BINARY_MAP_WIDTH = 20;
-	BINARY_MAP_HEIGHT = 20;
 	// Generate a random map with a solid ground and some floating platforms
 	int width = BINARY_MAP_WIDTH;
 	int height = BINARY_MAP_HEIGHT;
@@ -982,15 +850,13 @@ int GenerateRandomMap(void)
 		BinaryCollisionArray[i] = new int[width];
 	}
 
-	srand((unsigned int)time(NULL));
-
 	// Parameters
-	int groundHeight = height - 3; // ground starts 3 rows from the bottom
+	int groundHeight = 3; // ground starts 3 rows from the bottom
 	float platformChance = 0.1f;   // 10% chance to spawn a floating platform block
 
 	for (int i = 0; i < height; ++i) {
 		for (int j = 0; j < width; ++j) {
-			if (i >= groundHeight) {
+			if (i <= groundHeight) {
 				MapData[i][j] = 1;
 			}
 			else if (rand() % 100 < (int)(platformChance * 100)) {
@@ -1005,9 +871,9 @@ int GenerateRandomMap(void)
 			BinaryCollisionArray[i][j] = (MapData[i][j] == 1) ? 1 : 0;
 		}
 	}
-
-
-	SpawnPlayersRandomly();
+	
+	SpawnPlayers();
+	//PrintRetrievedInformation();
 	return 1;
 }
 
@@ -1138,9 +1004,19 @@ void PrintRetrievedInformation(void)
 	std::cout << "Height " << BINARY_MAP_HEIGHT << std::endl;
 
 	// Loop through the 2D array MapData to print the map
+	std::cout << "MapData: " << std::endl;
 	for (int i = 0; i < BINARY_MAP_HEIGHT; ++i) {
 		for (int j = 0; j < BINARY_MAP_WIDTH; ++j) {
 			std::cout << MapData[i][j] << " ";  // Print each value followed by space
+		}
+		std::cout << std::endl;
+	}
+
+	// Loop through the 2D array BinaryCollisionArray to print the map
+	std::cout << "\nBinaryCollisionArray: " << std::endl;
+	for (int i = 0; i < BINARY_MAP_HEIGHT; ++i) {
+		for (int j = 0; j < BINARY_MAP_WIDTH; ++j) {
+			std::cout << BinaryCollisionArray[i][j] << " ";  // Print each value followed by space
 		}
 		std::cout << std::endl;
 	}

@@ -145,7 +145,6 @@ void Draw_DynamicObjectsInstances(void);
 void Display_GameStats(void);
 void Destroy_ObjectsInstances(void);
 void Free_AllAllocatedMemory(void);
-void EnemyStateMachine(GameObjInst* pInst);
 
 
 // ----------------------------------------------------------------------------
@@ -170,7 +169,7 @@ int		GetCellValue(int X, int Y);
 int		CheckInstanceBinaryMapCollision(float PosX, float PosY,
 										float scaleX, float scaleY);
 void	SnapToCell(float* Coordinate);
-void	SpawnPlayersRandomly(void);
+void	SpawnPlayers(void);
 int		GenerateRandomMap(void);
 int		ImportMapDataFromFile(char* FileName);
 void	FreeMapData(void);

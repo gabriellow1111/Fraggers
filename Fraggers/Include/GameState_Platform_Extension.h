@@ -169,6 +169,10 @@ int		GetCellValue(int X, int Y);
 int		CheckInstanceBinaryMapCollision(float PosX, float PosY,
 										float scaleX, float scaleY);
 void	SnapToCell(float* Coordinate);
+void	SnapBottomCollision(float* posY, float playerHeight);
+void	SnapTopCollision(float* posY, float playerHeight);
+void	SnapLeftCollision(float* posX, float playerWidth);
+void	SnapRightCollision(float* posX, float playerWidth);
 void	SpawnPlayers(void);
 int		GenerateRandomMap(void);
 int		ImportMapDataFromFile(char* FileName);

@@ -28,7 +28,7 @@ const unsigned int	GAME_OBJ_INST_NUM_MAX = 2048;		//The total number of differen
 
 //Gameplay related variables and values
 const float			GRAVITY = -20.0f;
-const float			JUMP_VELOCITY = 11.0f;
+const float			JUMP_VELOCITY = 15.0f;
 const float			MOVE_VELOCITY_HERO = 5.0f;
 const float			MOVE_VELOCITY_ENEMY = 5.0f;
 const double		ENEMY_IDLE_TIME = 2.0;				//Enemy idle time in seconds, before changing direction

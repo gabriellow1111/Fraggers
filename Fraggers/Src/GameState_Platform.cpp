@@ -39,8 +39,8 @@ unsigned int	sGameObjInstNum = 0;
 //Binary map data
 int **			MapData = nullptr;
 int **			BinaryCollisionArray = nullptr;
-int				BINARY_MAP_WIDTH = 100;
-int				BINARY_MAP_HEIGHT = 100;
+int				BINARY_MAP_WIDTH = 50;
+int				BINARY_MAP_HEIGHT = 50;
 GameObjInst* pBlackInstance = nullptr;
 GameObjInst* pWhiteInstance = nullptr;
 AEMtx33			MapTransform;
@@ -101,7 +101,6 @@ void GameStatePlatformUpdate(void)
 	GameObjInst *pInst = nullptr;
 
 	Update_Input_Physics();	
-
 
 	Apply_GravityPhysics();
 	

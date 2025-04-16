@@ -150,7 +150,7 @@ void Starting_GameObjectsInstances(void)
 			Set its position depending on its array indices in MapData
 
 	***********/
-
+	scl = { 1.f, 2.f };
 	// Loop through each cell in the binary map grid.
 	for (i = 0; i < BINARY_MAP_WIDTH; ++i)
 		for (j = 0; j < BINARY_MAP_HEIGHT; ++j)
@@ -343,59 +343,44 @@ void Check_GridBinaryCollision(void)
 		if (pInst->pObject->type != TYPE_OBJECT_PLAYER1 && pInst->pObject->type != TYPE_OBJECT_PLAYER2)
 			continue;
 
-		/*************
-		Update grid collision flag
-
-		if collision from bottom
-			Snap to cell on Y axis
-			Velocity Y = 0
-
-		if collision from top
-			Snap to cell on Y axis
-			Velocity Y = 0
-
-		if collision from left
-			Snap to cell on X axis
-			Velocity X = 0
-
-		if collision from right
-			Snap to cell on X axis
-			Velocity X = 0
-		*************/
-
+		// Collision response:
 		pInst->gridCollisionFlag = CheckInstanceBinaryMapCollision(pInst->posCurr.x, pInst->posCurr.y, pInst->scale.x, pInst->scale.y);
 
-		// if collision from bottom
+		// If collision from bottom
 		if (pInst->gridCollisionFlag & COLLISION_BOTTOM)
 		{
-			// Snap to cell on the Y axis
-			SnapToCell(&pInst->posCurr.y);
+			// Snap to the cell on the Y axis for bottom collision
+			SnapBottomCollision(&pInst->posCurr.y, pInst->scale.y);
 			pInst->velCurr.y = 0;
 		}
 
-		// if collision from top
+		// If collision from top
 		if (pInst->gridCollisionFlag & COLLISION_TOP)
 		{
-			// Snap to cell on the Y axis
-			SnapToCell(&pInst->posCurr.y);
-			pInst->velCurr.y = 0;
+			// Snap using the new top collision function
+			SnapTopCollision(&pInst->posCurr.y, pInst->scale.y);
+			pInst->velCurr.y *= 0.9f;
+			std::cout << "Top Collision Detected" << std::endl;
 		}
 
-		// if collision from left
+		// If collision from left
 		if (pInst->gridCollisionFlag & COLLISION_LEFT)
 		{
-			// Snap to cell on the X axis
-			SnapToCell(&pInst->posCurr.x);
+			// Snap using the new left collision function
+			SnapLeftCollision(&pInst->posCurr.x, pInst->scale.x);
 			pInst->velCurr.x = 0;
+			std::cout << "Left Collision Detected" << std::endl;
 		}
 
-		// if collision from right
+		// If collision from right
 		if (pInst->gridCollisionFlag & COLLISION_RIGHT)
 		{
-			// Snap to cell on the X axis
-			SnapToCell(&pInst->posCurr.x);
+			// Snap using the new right collision function
+			SnapRightCollision(&pInst->posCurr.x, pInst->scale.x);
 			pInst->velCurr.x = 0;
+			std::cout << "Right Collision Detected" << std::endl;
 		}
+
 	}
 }
 
@@ -745,10 +730,10 @@ int CheckInstanceBinaryMapCollision(float PosX, float PosY, float scaleX, float 
 	int Flag = 0;
 
 	// Check for left side
-	float x1 = PosX - scaleX / 2;
-	float y1 = PosY + scaleY / 4;
-	float x2 = PosX - scaleX / 2;
-	float y2 = PosY - scaleY / 4;
+	float x1 = PosX - scaleX / 2 * 0.9;
+	float y1 = PosY + scaleY / 4 * 0.9;
+	float x2 = PosX - scaleX / 2 * 0.9;
+	float y2 = PosY - scaleY / 4 * 0.9;
 
 	if (GetCellValue(static_cast<int>(x1), static_cast<int>(y1)) == 1 ||
 		GetCellValue(static_cast<int>(x2), static_cast<int>(y2)) == 1) {
@@ -756,10 +741,10 @@ int CheckInstanceBinaryMapCollision(float PosX, float PosY, float scaleX, float 
 	}
 
 	// Check for right side
-	x1 = PosX + scaleX / 2;
-	y1 = PosY + scaleY / 4;
-	x2 = PosX + scaleX / 2;
-	y2 = PosY - scaleY / 4;
+	x1 = PosX + scaleX / 2 * 0.9;
+	y1 = PosY + scaleY / 4 * 0.9;
+	x2 = PosX + scaleX / 2 * 0.9;
+	y2 = PosY - scaleY / 4 * 0.9;
 
 	if (GetCellValue(static_cast<int>(x1), static_cast<int>(y1)) == 1 ||
 		GetCellValue(static_cast<int>(x2), static_cast<int>(y2)) == 1) {
@@ -767,9 +752,9 @@ int CheckInstanceBinaryMapCollision(float PosX, float PosY, float scaleX, float 
 	}
 
 	// Check for top side
-	x1 = PosX + scaleX / 4;
+	x1 = PosX + scaleX / 2 * 0.9;
 	y1 = PosY + scaleY / 2;
-	x2 = PosX - scaleX / 4;
+	x2 = PosX - scaleX / 2 * 0.9;
 	y2 = PosY + scaleY / 2;
 
 	if (GetCellValue(static_cast<int>(x1), static_cast<int>(y1)) == 1 ||
@@ -810,6 +795,50 @@ void SnapToCell(float* Coordinate)
 	*Coordinate = static_cast<float>(integralPart) + 0.5f;
 }
 
+void SnapBottomCollision(float* posY, float playerHeight)
+{
+	// Calculate the bottom edge of the player.
+	float bottomEdge = *posY - playerHeight / 2;
+	int cellIndex = static_cast<int>(bottomEdge);  // cell index where the player's bottom is
+	// Snap the bottom edge to the top of the cell, which is cellIndex+1 (since cell boundaries are at integers)
+	float snappedBottom = static_cast<float>(cellIndex + 1);
+	// Re-adjust the center position so that bottom edge is at snappedBottom.
+	*posY = snappedBottom + playerHeight / 2;
+}
+
+void SnapTopCollision(float* posY, float playerHeight)
+{
+	// Calculate the top edge of the player.
+	float topEdge = *posY + playerHeight / 2;
+	int cellIndex = static_cast<int>(topEdge);  // Cell index where the player's top is
+	// Snap the top edge to the bottom boundary of that cell (which is simply the cell index).
+	float snappedTop = static_cast<float>(cellIndex);
+	// Adjust the center so that the top edge is at snappedTop.
+	*posY = snappedTop - playerHeight / 2;
+}
+
+void SnapLeftCollision(float* posX, float playerWidth)
+{
+	// Calculate the left edge of the player.
+	float leftEdge = *posX - playerWidth / 2;
+	int cellIndex = static_cast<int>(leftEdge); // Cell index where the player's left edge is.
+	// Snap the left edge to the right boundary of that cell, which is cellIndex + 1.
+	float snappedLeft = static_cast<float>(cellIndex + 1);
+	// Adjust the center so that the left edge sits exactly at snappedLeft.
+	*posX = snappedLeft + playerWidth / 2;
+}
+
+void SnapRightCollision(float* posX, float playerWidth)
+{
+	// Calculate the right edge of the player.
+	float rightEdge = *posX + playerWidth / 2;
+	int cellIndex = static_cast<int>(rightEdge); // Cell index where the player's right edge is.
+	// Snap the right edge to the left boundary of that cell (which is the cell index).
+	float snappedRight = static_cast<float>(cellIndex);
+	// Adjust the center so that the right edge is exactly at snappedRight.
+	*posX = snappedRight - playerWidth / 2;
+}
+
 void SpawnPlayers()
 {
 	bool player1Spawned = false;
@@ -820,7 +849,7 @@ void SpawnPlayers()
 		int y = rand() % (BINARY_MAP_HEIGHT - 3); // avoid bottom row
 
 		// Valid if current tile is empty and tile below is solid
-		if (MapData[y][x] == 0 && MapData[y - 1][x] == 1) {
+		if (MapData[y][x] == 0 && MapData[y - 1][x] == 1 && MapData[y + 1][x] != 1) {
 			if (!player1Spawned) {
 				MapData[y][x] = 2;
 				player1Spawned = true;

@@ -805,11 +805,16 @@ void SpawnPlayers()
 	bool player2Spawned = false;
 
 	while (!player1Spawned || !player2Spawned) {
-		int x = rand() % BINARY_MAP_WIDTH;
-		int y = rand() % (BINARY_MAP_HEIGHT - 3); // avoid bottom row
+		int x = 1 + rand() % BINARY_MAP_WIDTH;
+		int y = 2 + rand() % (BINARY_MAP_HEIGHT - 10); // avoid bottom row
 
 		// Valid if current tile is empty and tile below is solid
-		if (MapData[y][x] == 0 && MapData[y - 2][x] == 1 && MapData[y + 1][x] != 1 && MapData[y + 2][x] != 1) {
+		if (MapData[y][x] == 0 && 
+			MapData[y][x + 1] == 0 &&
+			MapData[y][x - 1] == 0 &&
+			MapData[y - 2][x] == 1 && 
+			MapData[y + 1][x] == 0 && 
+			MapData[y + 2][x] == 0) {
 			if (!player1Spawned) {
 				MapData[y][x] = 2;
 				player1Spawned = true;
@@ -827,7 +832,6 @@ void SpawnPlayers()
 
 int GenerateRandomMap(void)
 {
-	// Generate a random map with a solid ground and some floating platforms
 	int width = BINARY_MAP_WIDTH;
 	int height = BINARY_MAP_HEIGHT;
 
@@ -839,32 +843,86 @@ int GenerateRandomMap(void)
 		BinaryCollisionArray[i] = new int[width];
 	}
 
-	// Parameters
-	int groundHeight = 10; // ground starts 3 rows from the bottom
-	float platformChance = 0.01f;   // 10% chance to spawn a floating platform block
+	// Terrain parameters
+	int baseGroundHeight = 8;
+	int minHeight = baseGroundHeight - 4;
+	int maxHeight = baseGroundHeight + 8;
+	int currentHeight = baseGroundHeight;
 
-	for (int i = 0; i < height; ++i) {
-		for (int j = 0; j < width; ++j) {
-			if (i <= groundHeight) {
-				MapData[i][j] = 1;
-			}
-			else if (rand() % 100 < (int)(platformChance * 100)) {
-				if (i > 0 && MapData[i - 1][j] == 0)
-					MapData[i][j] = 1;
-				else
-					MapData[i][j] = 0;
-			}
-			else {
-				MapData[i][j] = 0;
-			}
-			BinaryCollisionArray[i][j] = (MapData[i][j] == 1) ? 1 : 0;
+	// Floating platform parameters
+	float platformChance = 0.5f;
+	int platformMinLength = 3;
+	int platformMaxLength = 6;
+
+	// Generate smooth terrain
+	for (int j = 0; j < width; ++j)
+	{
+		// Smooth terrain: only change by -1, 0, or +1
+		int step = (rand() % 3) - 1;
+		currentHeight += step;
+
+		// Clamp to min/max bounds
+		if (currentHeight < minHeight) currentHeight = minHeight;
+		if (currentHeight > maxHeight) currentHeight = maxHeight;
+
+		for (int i = 0; i < height; ++i)
+		{
+			MapData[i][j] = (i <= currentHeight) ? 1 : 0;
 		}
 	}
-	
+
+	// Add longer floating platforms in the sky, with enough space for 4-block-tall players
+	for (int attempt = 0; attempt < 50; ++attempt)
+	{
+		if ((rand() % 100) < (int)(platformChance * 1000))
+		{
+			int platformLength = platformMinLength + rand() % (platformMaxLength - platformMinLength + 1);
+			int startX = rand() % (width - platformLength - 1);
+
+			// Generate platform high enough to allow player standing space (e.g., 4 blocks of air above)
+			int minY = maxHeight + 4;
+			int maxY = height - 6; // avoid placing too close to top
+			int y = minY + rand() % (maxY - minY);
+
+			// Check clearance before placing
+			bool canPlace = true;
+			for (int i = 0; i < platformLength && canPlace; ++i)
+			{
+				int x = startX + i;
+
+				// Check 4 blocks above + 1 below
+				for (int offsetY = -4; offsetY <= 4; ++offsetY)
+				{
+					if (MapData[y - offsetY][x] != 0)
+					{
+						canPlace = false;
+						break;
+					}
+				}
+			}
+
+			if (canPlace)
+			{
+				// Place platform
+				for (int x = startX; x < startX + platformLength; ++x)
+				{
+					MapData[y][x] = 1;
+				}
+			}
+		}
+	}
+
+
+	// Collision data
+	for (int i = 0; i < height; ++i)
+		for (int j = 0; j < width; ++j)
+			BinaryCollisionArray[i][j] = (MapData[i][j] == 1) ? 1 : 0;
+
 	SpawnPlayers();
-	//PrintRetrievedInformation();
 	return 1;
 }
+
+
 
 // ----------------------------------------------------------------------------
 //

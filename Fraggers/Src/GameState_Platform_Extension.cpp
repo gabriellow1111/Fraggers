@@ -804,31 +804,41 @@ void SpawnPlayers()
 	bool player1Spawned = false;
 	bool player2Spawned = false;
 
-	while (!player1Spawned || !player2Spawned) {
-		int x = 1 + rand() % BINARY_MAP_WIDTH;
-		int y = 2 + rand() % (BINARY_MAP_HEIGHT - 10); // avoid bottom row
+	while ((!player1Spawned || !player2Spawned)) {
+		int x = 1 + rand() % (BINARY_MAP_WIDTH - 2);  // Ensure x is within bounds
+		int y = 2 + rand() % (BINARY_MAP_HEIGHT - 12); // Ensure y is within bounds (leaving space above)
 
-		// Valid if current tile is empty and tile below is solid
-		if (MapData[y][x] == 0 && 
-			MapData[y][x + 1] == 0 &&
-			MapData[y][x - 1] == 0 &&
-			MapData[y - 2][x] == 1 && 
-			MapData[y + 1][x] == 0 && 
-			MapData[y + 2][x] == 0) {
+		//Check the 8 surrounding tiles around the player
+		bool isAreaFree = MapData[y][x] == 0 &&
+		MapData[y][x + 1] == 0 &&
+		MapData[y][x - 1] == 0 &&
+		MapData[y - 1][x] == 0 &&
+		MapData[y - 1][x + 1] == 0 &&
+		MapData[y - 1][x - 1] == 0 &&
+		MapData[y + 1][x] == 0 &&
+		MapData[y + 1][x + 1] == 0 &&
+		MapData[y + 1][x - 1] == 0;
+
+		// Check if the spot is empty and safe for spawn (no terrain in the way)
+		bool isBottomSolid = MapData[y - 2][x] == 1 && MapData[y + 1][x] == 0 && MapData[y + 2][x] == 0;
+
+		if (isAreaFree && isBottomSolid) {
 			if (!player1Spawned) {
-				MapData[y][x] = 2;
+				MapData[y][x] = 2;  // Mark player 1's spawn point
 				player1Spawned = true;
 			}
 			else if (!player2Spawned) {
-				// Don't spawn both players on same tile
+				// Don't spawn both players on the same tile
 				if (MapData[y][x] == 0) {
-					MapData[y][x] = 3;
+					MapData[y][x] = 3;  // Mark player 2's spawn point
 					player2Spawned = true;
 				}
 			}
 		}
 	}
 }
+
+
 
 int GenerateRandomMap(void)
 {
@@ -845,8 +855,8 @@ int GenerateRandomMap(void)
 
 	// Terrain parameters
 	int baseGroundHeight = 8;
-	int minHeight = baseGroundHeight - 4;
-	int maxHeight = baseGroundHeight + 8;
+	int minHeight = baseGroundHeight - 1;
+	int maxHeight = baseGroundHeight + 1;
 	int currentHeight = baseGroundHeight;
 
 	// Floating platform parameters
@@ -857,8 +867,15 @@ int GenerateRandomMap(void)
 	// Generate smooth terrain
 	for (int j = 0; j < width; ++j)
 	{
-		// Smooth terrain: only change by -1, 0, or +1
-		int step = (rand() % 3) - 1;
+		// Smooth terrain: usually no change, but occasionally +1 or -1
+		int step = 0;
+
+		// Occasionally change the height by +1 or -1 with a low probability
+		if (rand() % 100 < 10)  // 10% chance to change the height
+		{
+			step = (rand() % 2 == 0) ? 2 : -2;  // Change by +1 or -1
+		}
+
 		currentHeight += step;
 
 		// Clamp to min/max bounds
@@ -933,41 +950,7 @@ int GenerateRandomMap(void)
 //	The remaining part of the file is a series of numbers
 //	Each number represents the ID (or value) of a different element in the 
 //	double dimensionaly array.
-//
-//	Example:
-//
-//	Width 5
-//	Height 5
-//	1 1 1 1 1
-//	1 1 1 3 1
-//	1 4 2 0 1
-//	1 0 0 0 1
-//	1 1 1 1 1
-//
-//
-//	After importing the above data, "MapData" and " BinaryCollisionArray" 
-//	should be
-//
-//	1 1 1 1 1
-//	1 1 1 3 1
-//	1 4 2 0 1
-//	1 0 0 0 1
-//	1 1 1 1 1
-//
-//	and
-//
-//	1 1 1 1 1
-//	1 1 1 0 1
-//	1 0 0 0 1
-//	1 0 0 0 1
-//	1 1 1 1 1
-//
-//	respectively.
-//	
-//	Finally, the function returns 1 if the file named "FileName" exists, 
-//	otherwise it returns 0
-//
-// ----------------------------------------------------------------------------
+
 int ImportMapDataFromFile(char* FileName)
 {
 	std::ifstream file(FileName);

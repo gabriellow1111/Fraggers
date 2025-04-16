@@ -37,6 +37,9 @@ const int			GRID_WIDTH_IN_VIEWPORT = 20;		//Number of grid cells, visible in the
 const int			GRID_HEIGHT_IN_VIEWPORT = 20;		//Number of grid cells, visible in the viewport along the y-axis
 const float         BOUNDING_RECT_SIZE = 1.0f;			// this is the normalized bounding rectangle (width and height) sizes - AABB collision data
 
+const int stepHeight = 1; // how many tiles up we can step
+const int playerHeightInTiles = 4;
+
 //Flags
 const unsigned int	FLAG_ACTIVE = 0x00000001;
 const unsigned int	FLAG_VISIBLE = 0x00000002;

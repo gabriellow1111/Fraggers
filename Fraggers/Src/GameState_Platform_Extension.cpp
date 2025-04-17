@@ -821,39 +821,49 @@ void SpawnPlayers()
 	bool player1Spawned = false;
 	bool player2Spawned = false;
 
+	int player1X = -1;
+	int player1Y = -1;
+
+	const int minSpawnDistance = 50; // Set how far apart (in tiles) you want them to spawn
+
 	while ((!player1Spawned || !player2Spawned)) {
-		int x = 1 + rand() % (BINARY_MAP_WIDTH - 2);  // Ensure x is within bounds
-		int y = 2 + rand() % (BINARY_MAP_HEIGHT - 12); // Ensure y is within bounds (leaving space above)
+		int x = 1 + rand() % (BINARY_MAP_WIDTH - 2);
+		int y = 2 + rand() % (BINARY_MAP_HEIGHT - 12);
 
-		//Check the 8 surrounding tiles around the player
 		bool isAreaFree = MapData[y][x] == 0 &&
-		MapData[y][x + 1] == 0 &&
-		MapData[y][x - 1] == 0 &&
-		MapData[y - 1][x] == 0 &&
-		MapData[y - 1][x + 1] == 0 &&
-		MapData[y - 1][x - 1] == 0 &&
-		MapData[y + 1][x] == 0 &&
-		MapData[y + 1][x + 1] == 0 &&
-		MapData[y + 1][x - 1] == 0;
+			MapData[y][x + 1] == 0 &&
+			MapData[y][x - 1] == 0 &&
+			MapData[y - 1][x] == 0 &&
+			MapData[y - 1][x + 1] == 0 &&
+			MapData[y - 1][x - 1] == 0 &&
+			MapData[y + 1][x] == 0 &&
+			MapData[y + 1][x + 1] == 0 &&
+			MapData[y + 1][x - 1] == 0;
 
-		// Check if the spot is empty and safe for spawn (no terrain in the way)
 		bool isBottomSolid = MapData[y - 2][x] == 1 && MapData[y + 1][x] == 0 && MapData[y + 2][x] == 0;
 
 		if (isAreaFree && isBottomSolid) {
 			if (!player1Spawned) {
-				MapData[y][x] = 2;  // Mark player 1's spawn point
+				MapData[y][x] = 2;
+				player1X = x;
+				player1Y = y;
 				player1Spawned = true;
 			}
 			else if (!player2Spawned) {
-				// Don't spawn both players on the same tile
-				if (MapData[y][x] == 0) {
-					MapData[y][x] = 3;  // Mark player 2's spawn point
+				// Check distance from player 1
+				int dx = player1X - x;
+				int dy = player1Y - y;
+				int distanceSquared = dx * dx + dy * dy;
+
+				if (distanceSquared >= minSpawnDistance * minSpawnDistance) {
+					MapData[y][x] = 3;
 					player2Spawned = true;
 				}
 			}
 		}
 	}
 }
+
 
 
 
@@ -871,10 +881,11 @@ int GenerateRandomMap(void)
 	}
 
 	// Terrain parameters
-	int baseGroundHeight = 2;
-	int minHeight = baseGroundHeight - 1;
-	int maxHeight = baseGroundHeight + 1;
+	int baseGroundHeight = 12;
+	int minHeight = baseGroundHeight - 10;
+	int maxHeight = baseGroundHeight + 40;
 	int currentHeight = baseGroundHeight;
+	int prevStep = 0;
 
 	// Floating platform parameters
 	float platformChance = 0.5f;
@@ -888,10 +899,30 @@ int GenerateRandomMap(void)
 		int step = 0;
 
 		// Occasionally change the height by +1 or -1 with a low probability
-		if (rand() % 100 < 10)  // 10% chance to change the height
+		if (rand() % 100 < 40)  // 40% chance to change the height
 		{
-			step = (rand() % 2 == 0) ? 2 : -2;  // Change by +1 or -1
+			if (prevStep == 1)
+			{
+				// 70% chance to continue rising, 30% to drop
+				step = (rand() % 10 < 7) ? 1 : 0;
+			}
+			else if (prevStep == -1)
+			{
+				// 70% chance to continue falling, 30% to rise
+				step = (rand() % 10 < 7) ? -1 : 0;
+			}
+			else
+			{
+				// 50% chance to rise, 50% to drop
+				step = (rand() % 2 == 0) ? 1 : -1;
+			}
 		}
+		else
+		{
+			step = 0; // No height change this time
+		}
+
+		prevStep = step; // Store for next iteration
 
 		currentHeight += step;
 
@@ -914,7 +945,7 @@ int GenerateRandomMap(void)
 			int startX = rand() % (width - platformLength - 1);
 
 			// Generate platform high enough to allow player standing space (e.g., 4 blocks of air above)
-			int minY = maxHeight + 4;
+			int minY = baseGroundHeight + 6;
 			int maxY = height - 6; // avoid placing too close to top
 			int y = minY + rand() % (maxY - minY);
 

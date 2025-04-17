@@ -5,12 +5,16 @@
 #include <string>
 #include <cstdlib>
 
+void Init_GameObjects(void)
+{
 
-// =========================================================
-// 
-// import map data for the current level (level 1 or level 2)
-// 
-// =========================================================
+	//// Initialize weapons
+	//pWeapon1 = (Weapon*)gameObjInstCreate(TYPE_WEAPON_BOW, &scl, &pPlayer1->posCurr, &dir, 0.0f);
+	//pWeapon1->pInst = pPlayer1;
+	//pWeapon2 = (Weapon*)gameObjInstCreate(TYPE_WEAPON_BOW, &scl, &pPlayer2->posCurr, &dir, 0.0f);
+	//pWeapon2->pInst = pPlayer2;
+}
+
 void Import_MapData(void)
 {
 	//Setting intital binary map values
@@ -18,18 +22,11 @@ void Import_MapData(void)
 	BinaryCollisionArray = nullptr;
 
 	// LEVEL 1
-	if (gGameStateCurr == GS_BATTLE)
+	if (gGameStateCurr == GS_BATTLE || gGameStateCurr == GS_DEATHMATCH)
 	{
-		GenerateRandomMap();
+		GenerateRandomMap(); 
 	}
 
-	// LEVEL 2
-	else if (gGameStateCurr == GS_DEATHMATCH)
-	{
-		//Importing Data - Must Quit the application if "ImportMapDataFromFile" fails
-		if (!ImportMapDataFromFile("..\\Resources\\Levels\\Exported2.txt"))
-			gGameStateNext = GS_QUIT;
-	}
 }
 
 // =========================================================
@@ -91,6 +88,8 @@ void Starting_GameObjectsInstances(void)
 
 	pPlayer1 = nullptr;
 	pPlayer2 = nullptr;
+	pArrow1 = nullptr;
+	pArrow2 = nullptr;
 
 	//Setting the inital number of hero lives
 	Player1_Lives = HERO_LIVES;
@@ -100,6 +99,7 @@ void Starting_GameObjectsInstances(void)
 	AEVec2 Pos = { 0.f,0.f };
 
 	scl = { 2.f, 4.f };
+	AEVec2 scl1 = { 4.f, 4.f };
 	// Loop through each cell in the binary map grid.
 	for (i = 0; i < BINARY_MAP_WIDTH; ++i)
 		for (j = 0; j < BINARY_MAP_HEIGHT; ++j)
@@ -117,10 +117,14 @@ void Starting_GameObjectsInstances(void)
 			case (TYPE_OBJECT_PLAYER1):
 				// Create player 1 object instance.
 				pPlayer1 = gameObjInstCreate(TYPE_OBJECT_PLAYER1, &scl, &Pos, 0, 0.0f);
+				pArrow1 = gameObjInstCreate(TYPE_OBJECT_ARROW, &scl1, &Pos, 0, 0.0f);
+				pArrow1->pOwner = 1;
 				break;
 			case (TYPE_OBJECT_PLAYER2):
 				// Create player 2 object instance.
 				pPlayer2 = gameObjInstCreate(TYPE_OBJECT_PLAYER2, &scl, &Pos, 0, 0.0f);
+				pArrow2 = gameObjInstCreate(TYPE_OBJECT_ARROW, &scl1, &Pos, 0, 0.0f);
+				pArrow2->pOwner = 2;
 				break;
 			default:
 				// Handle any unknown object types (if necessary).
@@ -274,12 +278,37 @@ void Update_Positions(void)
 		if ((pInst->flag & FLAG_ACTIVE) == 0)
 			continue;
 
-		// Update the position using the velocity
-		AEVec2 added;
-		AEVec2Set(&added, pInst->velCurr.x * (float)g_dt, pInst->velCurr.y * (float)g_dt); // Position = Velocity * deltaTime
-		AEVec2Add(&pInst->posCurr, &pInst->posCurr, &added); // Update position
-		/*if (pInst->pObject->type == TYPE_OBJECT_PLAYER1)
-			std::cout << "Position: " << pInst->posCurr.x << ", " << pInst->posCurr.y << std::endl;*/
+		if (pInst->pObject->type == TYPE_OBJECT_ARROW) {
+
+			// Update angle
+			pInst->dirCurr += rotationSpeed * (float)g_dt;
+
+			// Clamp to 0-2PI if you want
+			if (pInst->dirCurr > PI * 2)
+				pInst->dirCurr -= PI * 2;
+
+			// Calculate offset from player using polar coordinates
+			float offsetX = cosf(pInst->dirCurr) * radius;
+			float offsetY = sinf(pInst->dirCurr) * radius;
+
+			AEVec2 ownerPos{ 0.f, 0.f };
+
+			// Update position 
+			if (pInst->pOwner == 1) {
+				ownerPos = pPlayer1->posCurr;
+			}
+			else if (pInst->pOwner == 2) {
+				ownerPos = pPlayer2->posCurr;
+			}
+			pInst->posCurr.x = ownerPos.x + offsetX;
+			pInst->posCurr.y = ownerPos.y + offsetY;
+		}
+		else {
+			// Update the position using the velocity
+			AEVec2 added;
+			AEVec2Set(&added, pInst->velCurr.x * (float)g_dt, pInst->velCurr.y * (float)g_dt); // Position = Velocity * deltaTime
+			AEVec2Add(&pInst->posCurr, &pInst->posCurr, &added); // Update position
+		}
 	}
 }
 
@@ -984,58 +1013,6 @@ int GenerateRandomMap(void)
 			BinaryCollisionArray[i][j] = (MapData[i][j] == 1) ? 1 : 0;
 
 	SpawnPlayers();
-	return 1;
-}
-
-
-
-// ----------------------------------------------------------------------------
-//
-//	This function opens the file name "FileName" and retrieves all the map data.
-//	It allocates memory for the 2 arrays: MapData & BinaryCollisionArray
-//	The first line in this file is the width of the map.
-//	The second line in this file is the height of the map.
-//	The remaining part of the file is a series of numbers
-//	Each number represents the ID (or value) of a different element in the 
-//	double dimensionaly array.
-
-int ImportMapDataFromFile(char* FileName)
-{
-	std::ifstream file(FileName);
-
-	if (!file) {
-		return 0;
-	}
-
-	std::string line;
-
-	// Read the width and height from the file
-	std::getline(file, line); // Read Width line
-	BINARY_MAP_WIDTH = std::stoi(line.substr(6).c_str()); // Read width digit
-
-	std::getline(file, line); // Read height line
-	BINARY_MAP_HEIGHT = std::stoi(line.substr(7).c_str()); // Read height digit
-
-	// Allocate memory for MapData and BinaryCollisionArray
-	MapData = new int* [BINARY_MAP_HEIGHT];
-	BinaryCollisionArray = new int* [BINARY_MAP_HEIGHT];
-
-	for (int i = 0; i < BINARY_MAP_HEIGHT; ++i) {
-		MapData[i] = new int[BINARY_MAP_WIDTH];
-		BinaryCollisionArray[i] = new int[BINARY_MAP_WIDTH];
-	}
-
-	// Read the map data
-	for (int i = 0; i < BINARY_MAP_HEIGHT; ++i) {
-		for (int j = 0; j < BINARY_MAP_WIDTH; ++j) {
-			file >> MapData[i][j]; // Read the map value
-
-			// Populate the BinaryCollisionArray: 1 for "1", 0 for any other number
-			BinaryCollisionArray[i][j] = (MapData[i][j] == 1) ? 1 : 0;
-		}
-	}
-
-	file.close();
 	return 1;
 }
 

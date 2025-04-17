@@ -1,21 +1,5 @@
-/* Start Header ************************************************************************/
-/*!
-\file		GameState_Platform_Extension.h
-\author		DigiPen, DigiPen, DigiPen
-\par		digipen@digipen.edu
-\date		January, 22, 2025
-\brief		This file declares important structures, enumerations, helper functions and
-			essential functions for the platform game state implementation.
 
-Copyright (C) 2025 DigiPen Institute of Technology.
-Reproduction or disclosure of this file or its contents
-without the prior written consent of DigiPen Institute of
-Technology is prohibited.
-*/
-/* End Header **************************************************************************/
-
-#ifndef CSD1130_GAMESTATE_PLATFORM_EXTENSION_H_
-#define CSD1130_GAMESTATE_PLATFORM_EXTENSION_H_
+#pragma once
 
 #include "AEEngine.h"
 #include "Math.h"
@@ -35,6 +19,22 @@ enum TYPE_OBJECT
 	TYPE_OBJECT_COLLISION,		//1
 	TYPE_OBJECT_PLAYER1,			//2
 	TYPE_OBJECT_PLAYER2,			//3
+	TYPE_OBJECT_ARROW,			//4	
+};
+
+// ----------------------------------------------------------------------------
+//
+// Weapon types
+//
+// ----------------------------------------------------------------------------
+enum TYPE_WEAPON
+{
+	TYPE_WEAPON_BOW,				//1
+	TYPE_WEAPON_CROSSBOW,			//2
+	TYPE_WEAPON_GUN,				//3
+	TYPE_WEAPON_ROCKET_LAUNCHER,	//4
+	TYPE_WEAPON_RAILGUN,			//5
+	TYPE_WEAPON_NUM					//6
 };
 
 // ----------------------------------------------------------------------------
@@ -92,10 +92,10 @@ struct GameObjInst
 											// calculate the object instance's transformation matrix and save it here.
 
 	AABB			boundingBox;			// object bouding box that encapsulates the object
-
 	int				gridCollisionFlag;		// used to hold the current object's collision flag status
 
-	void* pUserData;						// pointer to custom data specific for each object type
+	int				pOwner;					// pointer to the owner of this object instance
+	void*			pUserData;				// pointer to custom data specific for each object type
 
 	enum			STATE state;			// state of the object instance
 	enum			INNER_STATE innerState;	// inner State of the object instance		
@@ -109,7 +109,6 @@ struct GameObjInst
 	int maxJumps;                             // maximum allowed jumps (e.g., 2 for double jump)
 	bool isJumping;                         // flag to check if the player is currently jumping
 };
-
 
 // ----------------------------------------------------------------------------
 //
@@ -131,8 +130,17 @@ extern int				BINARY_MAP_HEIGHT;
 extern GameObjInst *	pBlackInstance;
 extern GameObjInst *	pWhiteInstance;
 extern AEMtx33			MapTransform;
-extern GameObjInst *	pPlayer1;
+extern GameObjInst*		pPlayer1;
 extern GameObjInst*		pPlayer2;
+extern GameObjInst*			pArrow1;
+extern GameObjInst*			pArrow2;
+//extern Weapon*			pWeapon1;
+//extern Weapon*			pWeapon2;
+
+// ----------------------------------------------------------------------------
+// New functions
+// ----------------------------------------------------------------------------
+void Init_GameObjects(void);
 
 void Import_MapData(void);
 void Compute_MapTransformMatrix(void);
@@ -180,10 +188,6 @@ void	SnapLeftCollision(float* posX, float playerWidth);
 void	SnapRightCollision(float* posX, float playerWidth);
 void	SpawnPlayers(void);
 int		GenerateRandomMap(void);
-int		ImportMapDataFromFile(char* FileName);
 void	FreeMapData(void);
 void	PrintRetrievedInformation(void);
-
-#endif // CSD1130_GAMESTATE_PLATFORM_EXTENSION_H_
-
 

@@ -49,6 +49,14 @@ AEMtx33			MapTransform;
 GameObjInst*	pPlayer1 = nullptr;
 GameObjInst*	pPlayer2 = nullptr;
 
+// We need a pointer to the arrow's instance for faster access
+GameObjInst* pArrow1 = nullptr;
+GameObjInst* pArrow2 = nullptr;
+
+// We need a pointer to the weapon's instance for faster access
+//Weapon* pWeapon1 = nullptr;
+//Weapon* pWeapon2 = nullptr;
+
 
 // ----------------------------------------------------------------------------
 //
@@ -88,6 +96,7 @@ void GameStatePlatformInit(void)
 
 	// Helper function to create all the initial game objects instances
 	Starting_GameObjectsInstances();
+	Init_GameObjects();
 }
 
 // ----------------------------------------------------------------------------
@@ -273,6 +282,19 @@ void Load_AllMeshes(void)
 	pObj->pMesh = AEGfxMeshEnd();
 	AE_ASSERT_MESG(pObj->pMesh, "fail to create object!!");
 
+	// Creating arrow object (YELLOW, pointing right)
+	pObj = sGameObjList + sGameObjNum++;
+	pObj->type = TYPE_OBJECT_ARROW;
+
+	AEGfxMeshStart();
+	AEGfxTriAdd(
+		-0.5f, -0.25f, 0xFFFFFFFF, 0.0f, 0.0f,  // Yellow
+		-0.5f, 0.25f, 0xFFFFFFFF, 0.0f, 0.0f,
+		0.5f, 0.0f, 0xFFFFFFFF, 0.0f, 0.0f);
+
+	pObj->pMesh = AEGfxMeshEnd();
+	AE_ASSERT_MESG(pObj->pMesh, "fail to create arrow object!!");
+
 }
 
 // ----------------------------------------------------------------------------
@@ -306,7 +328,7 @@ GameObjInst* gameObjInstCreate( unsigned long type,
 			pInst->posCurr			 = pPos ? *pPos : zero;
 			pInst->velCurr			 = pVel ? *pVel : zero;
 			pInst->dirCurr			 = dir;
-			pInst->pUserData		 = 0;
+			pInst->pOwner			 = 0;
 			pInst->gridCollisionFlag = 0;
 			pInst->state			 = STATE_GOING_LEFT;
 			pInst->innerState		 = INNER_STATE_ON_ENTER;

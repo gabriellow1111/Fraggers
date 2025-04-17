@@ -1,2 +1,8 @@
-﻿  GameState_Platform_Extension.cpp
+﻿  AABB_Collision.cpp
+  GameStateMgr.cpp
+  GameState_MainMenu.cpp
+  GameState_Platform.cpp
+  GameState_Platform_Extension.cpp
+  Main.cpp
+  Generating Code...
   Fraggers.vcxproj -> D:\Github\Fraggers\Bin\FraggersD.exe

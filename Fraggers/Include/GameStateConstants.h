@@ -13,8 +13,8 @@ Technology is prohibited.
 */
 /* End Header **************************************************************************/
 
-#ifndef CSD1130_GAMESTATECONSTANTS_H_
-#define CSD1130_GAMESTATECONSTANTS_H_
+#ifndef GAMESTATECONSTANTS_H_
+#define GAMESTATECONSTANTS_H_
 
 #include "AEEngine.h"
 
@@ -37,8 +37,12 @@ const int			GRID_WIDTH_IN_VIEWPORT = 20;		//Number of grid cells, visible in the
 const int			GRID_HEIGHT_IN_VIEWPORT = 20;		//Number of grid cells, visible in the viewport along the y-axis
 const float         BOUNDING_RECT_SIZE = 1.0f;			// this is the normalized bounding rectangle (width and height) sizes - AABB collision data
 
-const int stepHeight = 1; // how many tiles up we can step
-const int playerHeightInTiles = 4;
+const int			stepHeight = 1;						// how many tiles up we can step
+const int			playerHeightInTiles = 4;
+
+//Arrows
+const float			radius = 5.0f;						// Distance from the player
+static float		rotationSpeed = 4.0f;				// Radians per second
 
 //Flags
 const unsigned int	FLAG_ACTIVE = 0x00000001;
@@ -54,4 +58,4 @@ const unsigned int	COLLISION_STEP_LEFT = 0x00000010;	//10000
 const unsigned int	COLLISION_STEP_RIGHT = 0x00000020;	//100000
 
 
-#endif // CSD1130_GAMESTATECONSTANTS_H_
+#endif // GAMESTATECONSTANTS_H_

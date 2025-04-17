@@ -158,13 +158,13 @@ void Update_Input_Physics(void)
 	{
 		if (pPlayer1->gridCollisionFlag & COLLISION_BOTTOM) {
 			pPlayer1->velCurr.y = JUMP_VELOCITY;
-			std::cout << "Jumping" << std::endl;
+			pPlayer1->isJumping = true; // Set jump state to true
 		}
 		else if (pPlayer1->jumpCount < pPlayer1->maxJumps) // Check if player can double jump
 		{
 			pPlayer1->velCurr.y = JUMP_VELOCITY; // Apply jump velocity.
 			pPlayer1->jumpCount++; // Increment jump count
-			std::cout << "Jumping" << std::endl;
+			pPlayer1->isJumping = true; // Set jump state to true
 		}
 	}
 	
@@ -188,11 +188,13 @@ void Update_Input_Physics(void)
 	{
 		if (pPlayer2->gridCollisionFlag & COLLISION_BOTTOM) {
 			pPlayer2->velCurr.y = JUMP_VELOCITY;
+			pPlayer2->isJumping = true; // Set jump state to true
 		}
 		else if (pPlayer2->jumpCount < pPlayer2->maxJumps) // Check if player can double jump
 		{
 			pPlayer2->velCurr.y = JUMP_VELOCITY; // Apply jump velocity.
 			pPlayer2->jumpCount++; // Increment jump count
+			pPlayer2->isJumping = true; // Set jump state to true
 		}
 	}
 	if (AEInputCheckTriggered(AEVK_ESCAPE))//DO NOT change or update or duplicate this input code line! Otherwise penalties may apply!
@@ -306,52 +308,42 @@ void Check_GridBinaryCollision(void)
 		// Collision response:
 		pInst->gridCollisionFlag = CheckInstanceBinaryMapCollision(pInst->posCurr.x, pInst->posCurr.y, pInst->scale.x, pInst->scale.y);
 
-		// If collision from bottom
-		if (pInst->gridCollisionFlag & COLLISION_BOTTOM)
-		{
-			// Snap to the cell on the Y axis for bottom collision
+		if (pInst->velCurr.x > 0 && (pInst->gridCollisionFlag & COLLISION_RIGHT)) {
+			bool canStep = (pInst->gridCollisionFlag & COLLISION_STEP_RIGHT) && !pInst->isJumping;
+			if (canStep) {
+				pInst->posCurr.y += 1.0f;
+				SnapBottomCollision(&pInst->posCurr.y, pInst->scale.y);
+			}
+			else {
+				SnapRightCollision(&pInst->posCurr.x, pInst->scale.x);
+				pInst->velCurr.x = 0;
+			}
+		}
+		else if (pInst->velCurr.x < 0 && (pInst->gridCollisionFlag & COLLISION_LEFT)) {
+			bool canStep = (pInst->gridCollisionFlag & COLLISION_STEP_LEFT) && !pInst->isJumping;
+			if (canStep) {
+				pInst->posCurr.y += 1.0f;
+				SnapBottomCollision(&pInst->posCurr.y, pInst->scale.y);
+			}
+			else {
+				SnapLeftCollision(&pInst->posCurr.x, pInst->scale.x);
+				pInst->velCurr.x = 0;
+			}
+		}
+
+		pInst->gridCollisionFlag = CheckInstanceBinaryMapCollision(
+			pInst->posCurr.x, pInst->posCurr.y, pInst->scale.x, pInst->scale.y
+		);
+
+		if (pInst->velCurr.y <= 0 && (pInst->gridCollisionFlag & COLLISION_BOTTOM)) {
 			SnapBottomCollision(&pInst->posCurr.y, pInst->scale.y);
 			pInst->velCurr.y = 0;
-			//std::cout << "Bottom Collision Detected" << std::endl;
+			pInst->isJumping = false;
+			pInst->jumpCount = 0;
 		}
-
-		// If collision from top
-		else if (pInst->gridCollisionFlag & COLLISION_TOP)
-		{
-			// Snap using the new top collision function
+		else if (pInst->velCurr.y > 0 && (pInst->gridCollisionFlag & COLLISION_TOP)) {
 			SnapTopCollision(&pInst->posCurr.y, pInst->scale.y);
-			pInst->velCurr.y *= 0.9f;
-			//std::cout << "Top Collision Detected" << std::endl;
-		}
-
-		// If collision from left
-		if (pInst->gridCollisionFlag & COLLISION_LEFT)
-		{
-			// Snap using the new left collision function
-			SnapLeftCollision(&pInst->posCurr.x, pInst->scale.x);
-			pInst->velCurr.x = 0;
-			//std::cout << "Left Collision Detected" << std::endl;
-		}
-
-		// If collision from right
-		else if (pInst->gridCollisionFlag & COLLISION_RIGHT)
-		{
-			// Snap using the new right collision function
-			SnapRightCollision(&pInst->posCurr.x, pInst->scale.x);
-			pInst->velCurr.x = 0;
-			//std::cout << "Right Collision Detected" << std::endl;
-		}
-
-		// Print player position and velocity for debugging
-		//std::cout << "Player X Velocity: " << pPlayer1->velCurr.x << std::endl;
-		//std::cout << "Player Y Velocity: " << pPlayer1->velCurr.y << std::endl;
-		//std::cout << "Player X Position: " << pPlayer1->posCurr.x << std::endl;
-		//std::cout << "Player Y Position: " << pPlayer1->posCurr.y << std::endl;
-		
-		// Reset jump count if the player is on the ground
-		if (pInst->gridCollisionFlag & COLLISION_BOTTOM)
-		{
-			pInst->jumpCount = 0; // Reset jump count
+			pInst->velCurr.y = 0;
 		}
 	}
 }
@@ -696,15 +688,12 @@ int GetCellValue(int X, int Y)
 // ----------------------------------------------------------------------------
 int CheckInstanceBinaryMapCollision(float PosX, float PosY, float scaleX, float scaleY)
 {
-	//At the end of this function, "Flag" will be used and returned, to determine which sides
-	//of the object instance are colliding. 2 hot spots will be placed on each side.
-
 	int Flag = 0;
 
-	const int numVerticalSamples = 4;
-	for (int i = 0; i < numVerticalSamples; ++i) {
-		float t = (float)(i + 1) / (numVerticalSamples + 1); // avoids very top and bottom
-		float sampleY = PosY + scaleY / 2 - scaleY * t; // from top to bottom, offset inwards
+	const int numVerticalHotSpots = 10; // Increase if needed for tighter gaps
+	for (int i = 0; i < numVerticalHotSpots - 2; ++i) {
+		float t = (float)i / (numVerticalHotSpots - 1); // from 0.0 to 1.0
+		float sampleY = PosY + scaleY / 2 - scaleY * t; // top to bottom
 
 		// LEFT
 		float leftX = PosX - scaleX / 2 * 0.99f;
@@ -726,8 +715,8 @@ int CheckInstanceBinaryMapCollision(float PosX, float PosY, float scaleX, float 
 
 	// Check for top side
 	float topY = PosY + scaleY / 2;
-	float x1 = PosX - scaleX / 8.0f;
-	float x2 = PosX + scaleX / 8.0f;
+	float x1 = PosX - scaleX / 4.0f;
+	float x2 = PosX + scaleX / 4.0f;
 
 	if (GetCellValue((int)x1, (int)topY) == 1 ||
 		GetCellValue((int)x2, (int)topY) == 1) {
@@ -737,11 +726,28 @@ int CheckInstanceBinaryMapCollision(float PosX, float PosY, float scaleX, float 
 
 	// Check for bottom side
 	float bottomY = PosY - scaleY / 2;
+	float leftStepX = PosX - scaleX / 2.0f * 0.99f;
+	float rightStepX = PosX + scaleX / 2.0f * 0.99f;
+	float stepY = PosY - scaleY * 3 / 8.0f;
+	float step2Y = PosY - scaleY / 8.0f;
 
 	if (GetCellValue((int)x1, (int)bottomY) == 1 ||
 		GetCellValue((int)x2, (int)bottomY) == 1) {
 		Flag |= COLLISION_BOTTOM;
-		return Flag;
+
+		// Check for step (1 tile high, not 2 tiles)
+		bool leftStep = GetCellValue((int)leftStepX, (int)stepY) == 1 && 
+			GetCellValue((int)leftStepX, (int)step2Y) == 0; 
+
+		bool rightStep = GetCellValue((int)rightStepX, (int)stepY) == 1 && 
+			GetCellValue((int)rightStepX, (int)step2Y) == 0; 
+
+		if (leftStep) {
+			Flag |= COLLISION_STEP_LEFT;
+		}
+		if (rightStep) {
+			Flag |= COLLISION_STEP_RIGHT;
+		}
 	}
 
 	return Flag;

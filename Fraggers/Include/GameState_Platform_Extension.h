@@ -107,6 +107,7 @@ struct GameObjInst
 	// For player jump management
 	int jumpCount;                            // current number of jumps made
 	int maxJumps;                             // maximum allowed jumps (e.g., 2 for double jump)
+	bool isJumping;                         // flag to check if the player is currently jumping
 };
 
 

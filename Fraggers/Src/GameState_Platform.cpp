@@ -314,6 +314,7 @@ GameObjInst* gameObjInstCreate( unsigned long type,
 			pInst->lifetime			 = 0.0f;
 			pInst->jumpCount		 = 0;
 			pInst->maxJumps			 = 1;
+			pInst->isJumping		 = false;
 			
 			// return the newly created instance
 			return pInst;

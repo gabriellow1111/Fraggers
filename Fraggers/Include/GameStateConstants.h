@@ -50,6 +50,8 @@ const unsigned int	COLLISION_LEFT = 0x00000001;		//0001
 const unsigned int	COLLISION_RIGHT = 0x00000002;		//0010
 const unsigned int	COLLISION_TOP = 0x00000004;			//0100
 const unsigned int	COLLISION_BOTTOM = 0x00000008;		//1000
+const unsigned int	COLLISION_STEP_LEFT = 0x00000010;	//10000
+const unsigned int	COLLISION_STEP_RIGHT = 0x00000020;	//100000
 
 
 #endif // CSD1130_GAMESTATECONSTANTS_H_

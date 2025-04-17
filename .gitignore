@@ -17,3 +17,5 @@
 *.idb
 *.log
 *.pdb
+Fraggers/x64/Debug/Fraggers.log
+*.ilk

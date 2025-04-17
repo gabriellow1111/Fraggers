@@ -19,3 +19,6 @@
 *.pdb
 Fraggers/x64/Debug/Fraggers.log
 *.ilk
+*.log
+Fraggers/x64/Debug/FraggersD.ilk
+*.ilk

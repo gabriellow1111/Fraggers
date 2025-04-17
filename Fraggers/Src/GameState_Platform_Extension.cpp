@@ -158,11 +158,13 @@ void Update_Input_Physics(void)
 	{
 		if (pPlayer1->gridCollisionFlag & COLLISION_BOTTOM) {
 			pPlayer1->velCurr.y = JUMP_VELOCITY;
+			std::cout << "Jumping" << std::endl;
 		}
 		else if (pPlayer1->jumpCount < pPlayer1->maxJumps) // Check if player can double jump
 		{
 			pPlayer1->velCurr.y = JUMP_VELOCITY; // Apply jump velocity.
 			pPlayer1->jumpCount++; // Increment jump count
+			std::cout << "Jumping" << std::endl;
 		}
 	}
 	
@@ -310,15 +312,16 @@ void Check_GridBinaryCollision(void)
 			// Snap to the cell on the Y axis for bottom collision
 			SnapBottomCollision(&pInst->posCurr.y, pInst->scale.y);
 			pInst->velCurr.y = 0;
+			//std::cout << "Bottom Collision Detected" << std::endl;
 		}
 
 		// If collision from top
-		if (pInst->gridCollisionFlag & COLLISION_TOP)
+		else if (pInst->gridCollisionFlag & COLLISION_TOP)
 		{
 			// Snap using the new top collision function
 			SnapTopCollision(&pInst->posCurr.y, pInst->scale.y);
 			pInst->velCurr.y *= 0.9f;
-			std::cout << "Top Collision Detected" << std::endl;
+			//std::cout << "Top Collision Detected" << std::endl;
 		}
 
 		// If collision from left
@@ -327,18 +330,24 @@ void Check_GridBinaryCollision(void)
 			// Snap using the new left collision function
 			SnapLeftCollision(&pInst->posCurr.x, pInst->scale.x);
 			pInst->velCurr.x = 0;
-			std::cout << "Left Collision Detected" << std::endl;
+			//std::cout << "Left Collision Detected" << std::endl;
 		}
 
 		// If collision from right
-		if (pInst->gridCollisionFlag & COLLISION_RIGHT)
+		else if (pInst->gridCollisionFlag & COLLISION_RIGHT)
 		{
 			// Snap using the new right collision function
 			SnapRightCollision(&pInst->posCurr.x, pInst->scale.x);
 			pInst->velCurr.x = 0;
-			std::cout << "Right Collision Detected" << std::endl;
+			//std::cout << "Right Collision Detected" << std::endl;
 		}
 
+		// Print player position and velocity for debugging
+		//std::cout << "Player X Velocity: " << pPlayer1->velCurr.x << std::endl;
+		//std::cout << "Player Y Velocity: " << pPlayer1->velCurr.y << std::endl;
+		//std::cout << "Player X Position: " << pPlayer1->posCurr.x << std::endl;
+		//std::cout << "Player Y Position: " << pPlayer1->posCurr.y << std::endl;
+		
 		// Reset jump count if the player is on the ground
 		if (pInst->gridCollisionFlag & COLLISION_BOTTOM)
 		{
@@ -699,38 +708,40 @@ int CheckInstanceBinaryMapCollision(float PosX, float PosY, float scaleX, float 
 
 		// LEFT
 		float leftX = PosX - scaleX / 2 * 0.99f;
-		if (GetCellValue((int)leftX, (int)sampleY) == 1)
+		if (GetCellValue((int)leftX, (int)sampleY) == 1) 
+		{
 			Flag |= COLLISION_LEFT;
+			break;
+		}
 
 		// RIGHT
 		float rightX = PosX + scaleX / 2 * 0.99f;
 		if (GetCellValue((int)rightX, (int)sampleY) == 1)
+		{
 			Flag |= COLLISION_RIGHT;
+			break;
+		}
 	}
 
 
 	// Check for top side
 	float topY = PosY + scaleY / 2;
-	float x1 = PosX - scaleX * 3 / 8.0f;
-	float x2 = PosX - scaleX / 4.0f;
-	float x3 = PosX + scaleX / 4.0f;
-	float x4 = PosX + scaleX * 3 / 8.0f;
+	float x1 = PosX - scaleX / 8.0f;
+	float x2 = PosX + scaleX / 8.0f;
 
 	if (GetCellValue((int)x1, (int)topY) == 1 ||
-		GetCellValue((int)x2, (int)topY) == 1 ||
-		GetCellValue((int)x3, (int)topY) == 1 ||
-		GetCellValue((int)x4, (int)topY) == 1) {
+		GetCellValue((int)x2, (int)topY) == 1) {
 		Flag |= COLLISION_TOP;
+		return Flag;
 	}
 
 	// Check for bottom side
 	float bottomY = PosY - scaleY / 2;
 
 	if (GetCellValue((int)x1, (int)bottomY) == 1 ||
-		GetCellValue((int)x2, (int)bottomY) == 1 ||
-		GetCellValue((int)x3, (int)bottomY) == 1 ||
-		GetCellValue((int)x4, (int)bottomY) == 1) {
+		GetCellValue((int)x2, (int)bottomY) == 1) {
 		Flag |= COLLISION_BOTTOM;
+		return Flag;
 	}
 
 	return Flag;
@@ -854,7 +865,7 @@ int GenerateRandomMap(void)
 	}
 
 	// Terrain parameters
-	int baseGroundHeight = 8;
+	int baseGroundHeight = 2;
 	int minHeight = baseGroundHeight - 1;
 	int maxHeight = baseGroundHeight + 1;
 	int currentHeight = baseGroundHeight;

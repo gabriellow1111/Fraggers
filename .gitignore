@@ -1,8 +1,6 @@
 /.vs
 /.tmp
 /bin
-*.vcxproj
-*.vcxproj.filters
 *.ipch
 *.pbd
 *.VC.db
@@ -15,10 +13,3 @@
 *.tlog
 *.obj
 *.idb
-*.log
-*.pdb
-Fraggers/x64/Debug/Fraggers.log
-*.ilk
-*.log
-Fraggers/x64/Debug/FraggersD.ilk
-*.ilk

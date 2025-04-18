@@ -16,3 +16,6 @@
 *.pdb
 *.log
 *.ilk
+*.ilk
+*.log
+*.recipe

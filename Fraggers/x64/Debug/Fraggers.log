@@ -1,2 +1,7 @@
-﻿  LINK : D:\Github\Fraggers\\Bin\FraggersD.exe not found or not built by the last incremental link; performing full link
-  Fraggers.vcxproj -> D:\Github\Fraggers\Bin\FraggersD.exe
+﻿AABB_Collision.obj : warning LNK4099: PDB '' was not found with 'AABB_Collision.obj' or at ''; linking object as if no debug info
+GameStateMgr.obj : warning LNK4099: PDB '' was not found with 'GameStateMgr.obj' or at ''; linking object as if no debug info
+GameState_MainMenu.obj : warning LNK4099: PDB '' was not found with 'GameState_MainMenu.obj' or at ''; linking object as if no debug info
+GameState_Platform.obj : warning LNK4099: PDB '' was not found with 'GameState_Platform.obj' or at ''; linking object as if no debug info
+GameState_Platform_Extension.obj : warning LNK4099: PDB '' was not found with 'GameState_Platform_Extension.obj' or at ''; linking object as if no debug info
+Main.obj : warning LNK4099: PDB '' was not found with 'Main.obj' or at ''; linking object as if no debug info
+  Fraggers.vcxproj -> C:\Github\Fraggers\Bin\FraggersD.exe

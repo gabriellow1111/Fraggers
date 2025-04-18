@@ -39,10 +39,17 @@ const float         BOUNDING_RECT_SIZE = 1.0f;			// this is the normalized bound
 
 const int			stepHeight = 1;						// how many tiles up we can step
 const int			playerHeightInTiles = 4;
+const int			PLAYER_MAX_HEALTH = 100;			// maximum health of the player
 
 //Arrows
 const float			radius = 5.0f;						// Distance from the player
-static float		rotationSpeed = 4.0f;				// Radians per second
+static float		rotationSpeed = 2.0f;				// Radians per second
+
+//Bullets
+const float			BULLET_SCALE_X = 4.0f;				// bullet scale x
+const float			BULLET_SCALE_Y = 1.0f;				// bullet scale y
+const float			BULLET_SPEED = 300.0f;				// bullet speed (m/s)
+const int 			BULLET_DAMAGE = 100;				// bullet damage
 
 //Flags
 const unsigned int	FLAG_ACTIVE = 0x00000001;

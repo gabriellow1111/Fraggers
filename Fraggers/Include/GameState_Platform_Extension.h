@@ -20,6 +20,7 @@ enum TYPE_OBJECT
 	TYPE_OBJECT_PLAYER1,			//2
 	TYPE_OBJECT_PLAYER2,			//3
 	TYPE_OBJECT_ARROW,			//4	
+	TYPE_OBJECT_BULLET,			//5
 };
 
 // ----------------------------------------------------------------------------
@@ -117,8 +118,8 @@ struct GameObjInst
 // ----------------------------------------------------------------------------
 extern int				Player1_Lives;
 extern int				Player2_Lives;
-extern int				Hero_Initial_X;
-extern int				Hero_Initial_Y;
+extern int				Player1_Health;
+extern int				Player2_Health;
 extern GameObj *		sGameObjList;
 extern unsigned int		sGameObjNum;
 extern GameObjInst *	sGameObjInstList;
@@ -136,6 +137,8 @@ extern GameObjInst*			pArrow1;
 extern GameObjInst*			pArrow2;
 //extern Weapon*			pWeapon1;
 //extern Weapon*			pWeapon2;
+extern bool					onValueChange;
+extern bool					stopPlaying;
 
 // ----------------------------------------------------------------------------
 // New functions
@@ -190,4 +193,5 @@ void	SpawnPlayers(void);
 int		GenerateRandomMap(void);
 void	FreeMapData(void);
 void	PrintRetrievedInformation(void);
-
+void	Update_Collisions(void);
+void	RemoveBullets(void);

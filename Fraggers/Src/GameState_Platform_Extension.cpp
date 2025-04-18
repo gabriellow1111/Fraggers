@@ -171,6 +171,32 @@ void Update_Input_Physics(void)
 			pPlayer1->isJumping = true; // Set jump state to true
 		}
 	}
+
+	// Shoot a bullet if space is triggered (create a new object instance)
+	if (AEInputCheckTriggered(AEVK_SPACE)) 
+	{
+		// Create the bullet at the ship's current position
+		AEVec2 bulletPos;
+		AEVec2Set(&bulletPos, pArrow1->posCurr.x, pArrow1->posCurr.y);
+
+		// Set the bullet's velocity based on the ship's current direction
+		AEVec2 bulletVel;
+		AEVec2Set(&bulletVel, cosf(pArrow1->dirCurr), sinf(pArrow1->dirCurr));
+		AEVec2Scale(&bulletVel, &bulletVel, BULLET_SPEED); // Adjust speed of the bullet
+
+		// Set the bullet's scale
+		AEVec2 bulletScale;
+		AEVec2Set(&bulletScale, BULLET_SCALE_X, BULLET_SCALE_Y);
+
+		// Create a new bullet object
+		gameObjInstCreate(
+			TYPE_OBJECT_BULLET,    // Type of the object (bullet)
+			&bulletScale,   // Scale of the bullet
+			&bulletPos,     // Position where the bullet is created
+			&bulletVel,     // Velocity of the bullet
+			pArrow1->dirCurr // Direction the bullet is fired in (same as the ship's direction)
+		);
+	}
 	
 	// PLAYER 2 CONTROLS
 	if (AEInputCheckCurr(AEVK_RIGHT))//DO NOT change or update or duplicate this input code line! Otherwise penalties may apply!
@@ -204,6 +230,32 @@ void Update_Input_Physics(void)
 	if (AEInputCheckTriggered(AEVK_ESCAPE))//DO NOT change or update or duplicate this input code line! Otherwise penalties may apply!
 	{		
 		gGameStateNext = GS_MAINMENU; // Change game state to main menu.
+	}
+
+	// Shoot a bullet if space is triggered (create a new object instance)
+	if (AEInputCheckTriggered(AEVK_RETURN))
+	{
+		// Create the bullet at the ship's current position
+		AEVec2 bulletPos;
+		AEVec2Set(&bulletPos, pArrow2->posCurr.x, pArrow2->posCurr.y);
+
+		// Set the bullet's velocity based on the ship's current direction
+		AEVec2 bulletVel;
+		AEVec2Set(&bulletVel, cosf(pArrow2->dirCurr), sinf(pArrow2->dirCurr));
+		AEVec2Scale(&bulletVel, &bulletVel, BULLET_SPEED); // Adjust speed of the bullet
+
+		// Set the bullet's scale
+		AEVec2 bulletScale;
+		AEVec2Set(&bulletScale, BULLET_SCALE_X, BULLET_SCALE_Y);
+
+		// Create a new bullet object
+		gameObjInstCreate(
+			TYPE_OBJECT_BULLET,    // Type of the object (bullet)
+			&bulletScale,   // Scale of the bullet
+			&bulletPos,     // Position where the bullet is created
+			&bulletVel,     // Velocity of the bullet
+			pArrow2->dirCurr // Direction the bullet is fired in (same as the ship's direction)
+		);
 	}
 }
 
@@ -598,12 +650,44 @@ void Draw_DynamicObjectsInstances(void)
 
 // ----------------------------------------------------------------------------
 //
-// display game stats using in game text objects
+// display game stats using in console
 //
 // ----------------------------------------------------------------------------
 void Display_GameStats(void)
 {
-	
+	char strBuffer[1024];
+	if (!stopPlaying) {
+		//The idea is to display any of these variables/strings whenever a change in their value happens
+		if (onValueChange)
+		{
+			sprintf_s(strBuffer, "Player 1 Lives: %d", Player1_Lives);
+			printf("%s \n", strBuffer);
+
+			sprintf_s(strBuffer, "Player 1 HP: %d", Player1_Health);
+			printf("%s \n", strBuffer);
+
+			sprintf_s(strBuffer, "Player 2 Lives: %d", Player2_Lives);
+			printf("%s \n", strBuffer);
+
+			sprintf_s(strBuffer, "Player 2 HP: %d", Player2_Health);
+			printf("%s \n", strBuffer);
+
+
+			// Check for win condition (score >= 5000)
+			if (Player1_Lives == 0)
+			{
+				printf("*******PLAYER 2 WINS*******\n");
+				stopPlaying = true;  // Stop the game
+			}
+			else if (Player2_Lives == 0)
+			{
+				printf("*******PLAYER 1 WINS*******\n");
+				stopPlaying = true;  // Stop the game
+			}
+
+			onValueChange = false;  // Reset the value change flag
+		}
+	}
 }
 
 // ----------------------------------------------------------------------------
@@ -1074,5 +1158,124 @@ void PrintRetrievedInformation(void)
 			std::cout << BinaryCollisionArray[i][j] << " ";  // Print each value followed by space
 		}
 		std::cout << std::endl;
+	}
+}
+
+// ======================================================================
+// 
+// check for rectangle-rectangle collisions
+// 
+// ======================================================================
+void Update_Collisions(void)
+{
+	for (unsigned long i = 0; i < GAME_OBJ_INST_NUM_MAX; i++)
+	{
+		if (gGameStateNext == GS_RESTART)
+			break;
+
+		GameObjInst* oi1 = sGameObjInstList + i;
+
+		// Skip inactive objects
+		if ((oi1->flag & FLAG_ACTIVE) == 0)
+			continue;
+
+		// Check collisions for asteroids
+		if (oi1->pObject->type == TYPE_OBJECT_PLAYER1 || oi1->pObject->type == TYPE_OBJECT_PLAYER2)
+		{
+			bool p1Hit = false;
+			bool p2Hit = false;
+
+			// Check collision against all other objects (ship and bullets)
+			for (unsigned long j = 0; j < GAME_OBJ_INST_NUM_MAX; j++)
+			{
+				if (i == j) continue; // Skip self
+				GameObjInst* oi2 = sGameObjInstList + j;
+
+				// Skip inactive objects
+				if ((oi2->flag & FLAG_ACTIVE) == 0)
+					continue;
+
+				// Skip non-ship & non-bullet objects
+				if (oi2->pObject->type != TYPE_OBJECT_BULLET)
+					continue;
+
+				// Perform rectangle-to-rectangle collision check
+				float tFirst;
+				if (CollisionIntersection_RectRect(oi1->boundingBox, oi1->velCurr, oi2->boundingBox, oi2->velCurr, tFirst))
+				{
+					if (oi1->pObject->type == TYPE_OBJECT_PLAYER1)
+					{
+						std::cout << "Player 1 hit by bullet!" << std::endl;
+						Player1_Health -= BULLET_DAMAGE;
+						oi2->flag &= ~FLAG_ACTIVE; // Deactivate bullet
+						p1Hit = true;
+						onValueChange = true; // Set the flag to indicate a value change
+					}
+					else if (oi1->pObject->type == TYPE_OBJECT_PLAYER2)
+					{
+						std::cout << "Player 2 hit by bullet!" << std::endl;
+						Player2_Health -= BULLET_DAMAGE;
+						oi2->flag &= ~FLAG_ACTIVE; // Deactivate bullet
+						p2Hit = true;
+						onValueChange = true; // Set the flag to indicate a value change
+					}
+					// Check if the player is dead
+					if (Player1_Health <= 0)
+					{
+						std::cout << "Player 1 died!" << std::endl;
+						Player1_Lives--;
+						Player1_Health = PLAYER_MAX_HEALTH; // Reset health
+						onValueChange = true; // Set the flag to indicate a value change
+						gGameStateNext = GS_RESTART;
+						break;
+					}
+					else if (Player2_Health <= 0)
+					{
+						std::cout << "Player 2 died!" << std::endl;
+						Player2_Lives--;
+						Player2_Health = PLAYER_MAX_HEALTH; // Reset health
+						onValueChange = true; // Set the flag to indicate a value change
+						gGameStateNext = GS_RESTART;
+						break;
+					}
+
+
+				}
+
+				if (p1Hit)
+					break;
+			}
+		}
+	}
+}
+
+// ===================================================================
+// update active game object instances
+// Example:
+//		-- Removing the bullets as they go out of the viewport's bounds
+//
+// ===================================================================
+void RemoveBullets(void)
+{
+	// Loop through all game object instances
+	for (unsigned long i = 0; i < GAME_OBJ_INST_NUM_MAX; i++)
+	{
+		GameObjInst* oi = sGameObjInstList + i;
+		// Skip non-active objects
+		if ((oi->flag & FLAG_ACTIVE) == 0)
+			continue;
+
+		// We are only interested in bullets
+		if (oi->pObject->type == TYPE_OBJECT_BULLET)
+		{
+			// Check if the bullet is outside the viewport bounds
+			// Assuming the viewport size is defined as VIEWPORT_WIDTH and VIEWPORT_HEIGHT
+			if (oi->posCurr.x < AEGfxGetWinMinX() || oi->posCurr.x > AEGfxGetWinMaxX() ||
+				oi->posCurr.y < AEGfxGetWinMinY() || oi->posCurr.y > AEGfxGetWinMaxY())
+			{
+				// Bullet is outside the viewport, deactivate it
+				oi->flag &= ~FLAG_ACTIVE; // Deactivate the bullet
+			}
+		}
 	}
 }

@@ -27,6 +27,8 @@ void Load_AllMeshes(void);
 // ----------------------------------------------------------------------------
 int				Player1_Lives = 0;
 int				Player2_Lives = 0;
+int				Player1_Health = PLAYER_MAX_HEALTH;
+int				Player2_Health = PLAYER_MAX_HEALTH;
 
 // list of original objects
 GameObj *		sGameObjList = nullptr;
@@ -57,6 +59,11 @@ GameObjInst* pArrow2 = nullptr;
 //Weapon* pWeapon1 = nullptr;
 //Weapon* pWeapon2 = nullptr;
 
+// a variable to control the console printout state
+bool				onValueChange = true;
+
+// a variable to seize the player's ship/bullets controls after losing or winning the game
+bool				stopPlaying = false;
 
 // ----------------------------------------------------------------------------
 //
@@ -139,12 +146,11 @@ void GameStatePlatformUpdate(void)
 	
 	Update_AABBCollisions();
 
-	Update_ObjectsTransformations();	
+	Update_Collisions();
 
-	if (gGameStateCurr == GS_DEATHMATCH)
-	{
-		Update_CameraPosition_Level2();
-	}
+	RemoveBullets();
+
+	Update_ObjectsTransformations();	
 }
 
 // ----------------------------------------------------------------------------
@@ -295,6 +301,25 @@ void Load_AllMeshes(void)
 	pObj->pMesh = AEGfxMeshEnd();
 	AE_ASSERT_MESG(pObj->pMesh, "fail to create arrow object!!");
 
+	// =======================
+	// create the bullet shape
+	// =======================
+
+	pObj = sGameObjList + sGameObjNum++;
+	pObj->type = TYPE_OBJECT_BULLET;
+
+	AEGfxMeshStart();
+	AEGfxTriAdd(
+		-0.5f, -0.5f, 0xFFFFFF00, 0.0f, 0.0f,
+		0.5f, 0.5f, 0xFFFFFF00, 0.0f, 0.0f,
+		-0.5f, 0.5f, 0xFFFFFF00, 0.0f, 0.0f);
+	AEGfxTriAdd(
+		-0.5f, -0.5f, 0xFFFFFF00, 0.0f, 0.0f,
+		0.5f, -0.5f, 0xFFFFFF00, 0.0f, 0.0f,
+		0.5f, 0.5f, 0xFFFFFF00, 0.0f, 0.0f);
+
+	pObj->pMesh = AEGfxMeshEnd();
+	AE_ASSERT_MESG(pObj->pMesh, "failed to create object!!");
 }
 
 // ----------------------------------------------------------------------------

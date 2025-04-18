@@ -13,3 +13,6 @@
 *.tlog
 *.obj
 *.idb
+*.pdb
+*.log
+*.ilk

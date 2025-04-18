@@ -1,6 +1,6 @@
 /.vs
 /.tmp
-/bin
+*.exe
 *.ipch
 *.pbd
 *.VC.db
